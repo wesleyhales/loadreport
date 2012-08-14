@@ -3,6 +3,7 @@ var confess = {
 
     run: function () {
         var cliConfig = {};
+        confess.performancecache = this.clone(confess.performance);
         if (!this.processArgs(cliConfig, [
             {
                 name: 'url',
@@ -11,18 +12,18 @@ var confess = {
                 desc: 'the URL of the app to cache'
             }, {
                 name: 'task',
-                def: 'appcache',
+                def: 'performance',
                 req: false,
                 desc: 'the task to perform',
-                oneof: ['performance', 'appcache', 'cssproperties']
+                oneof: ['performance', 'performancecache', 'filmstrip']
             }, {
                 name: 'configFile',
                 def: 'config.json',
                 req: false,
                 desc: 'a local configuration file of further confess settings'
-            },
+            }
         ])) {
-            phantom.exit();
+            //phantom.exit();
             return;
         }
         this.config = this.mergeConfig(cliConfig, cliConfig.configFile);
@@ -32,6 +33,36 @@ var confess = {
 
     performance: {
         resources: [],
+        count1 : 100,
+        count2 : 1,
+        timer : 0,
+        evalConsole : {},
+        evalConsoleErrors : [],
+        onInitialized: function(page, config) {
+            var pageecal = page.evaluate(function(startTime) {
+                var now = new Date().getTime();
+
+                var _timer1=setInterval(function(){
+                    if(/interactive/.test(document.readyState)){
+                        clearInterval(_timer1);
+                        console.log('interactive-' + (new Date().getTime() - startTime));
+                    }
+                }, 10);
+
+                var _timer2=setInterval(function(){
+                    if(/loaded|complete/.test(document.readyState)){
+                        clearInterval(_timer2);
+                        console.log('complete-' + (new Date().getTime() - startTime));
+                    }
+                }, 10);
+
+                window.onload = function(){console.log('onload-' + (new Date().getTime() - startTime));};
+
+                window.onerror = function(message, url, linenumber) {
+                    console.log("jserror-JavaScript error: " + message + " on line " + linenumber + " for " + url);
+                };
+            },this.performance.start);
+        },
         onLoadStarted: function (page, config) {
             if (!this.performance.start) {
                 this.performance.start = new Date().getTime();
@@ -44,7 +75,7 @@ var confess = {
                 url: request.url,
                 request: request,
                 responses: {},
-                duration: '-',
+                duration: '',
                 times: {
                     request: now
                 }
@@ -52,6 +83,7 @@ var confess = {
             if (!this.performance.start || now < this.performance.start) {
                 this.performance.start = now;
             }
+
         },
         onResourceReceived: function (page, config, response) {
             var now = new Date().getTime(),
@@ -63,9 +95,12 @@ var confess = {
             }
             if (response.bodySize) {
                 resource.size = response.bodySize;
+                response.headers.forEach(function (header) {
+                });
             } else if (!resource.size) {
                 response.headers.forEach(function (header) {
-                    if (header.name.toLowerCase()=='content-length') {
+                    if (header.name.toLowerCase()=='content-length' && header.value != 0) {
+                        //console.log('backup-------' + header.name + ':' + header.value);
                         resource.size = parseInt(header.value);
                     }
                 });
@@ -77,8 +112,10 @@ var confess = {
                 resources = this.performance.resources,
                 slowest, fastest, totalDuration = 0,
                 largest, smallest, totalSize = 0,
+                missingList = [],
                 missingSize = false,
-                elapsed = finish - start;
+                elapsed = finish - start,
+                now = new Date();
 
             resources.forEach(function (resource) {
                 if (!resource.times.start) {
@@ -101,8 +138,9 @@ var confess = {
                     }
                     totalSize += resource.size;
                 } else {
-                    resource.size = '-';
+                    resource.size = 0;
                     missingSize = true;
+                    missingList.push(resource.url);
                 }
             });
 
@@ -110,113 +148,84 @@ var confess = {
                 console.log('');
                 this.emitConfig(config, '');
             }
-            console.log('');
+
+            var report = {};
+            report.phantomCacheEnabled = phantom.args.indexOf('yes') >= 0 ? 'yes' : 'no';
+            report.taskName = config.task;
+            report.domReadyStateInteractive = isNaN(parseInt(this.performance.evalConsole.interactive)) == false ? parseInt(this.performance.evalConsole.interactive) : 0;
+            report.windowOnload = isNaN(parseInt(this.performance.evalConsole.onload)) == false ? parseInt(this.performance.evalConsole.onload) : 0;
+            report.domReadyStateComplete = isNaN(parseInt(this.performance.evalConsole.complete)) == false ? parseInt(this.performance.evalConsole.complete) : 0;
+            report.elapsedLoadTime = elapsed;
+            report.numberOfResources = resources.length-1;
+            report.totalResourcesTime = totalDuration;
+            report.totalResourcesSize = (totalSize / 1000);
+            report.nonReportingResources = missingList.length;
+            report.timeStamp = now.getTime();
+            report.date = now.getDate() + "/" + now.getMonth() + "/" + now.getFullYear();
+            report.time = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+            report.errors = this.performance.evalConsoleErrors;
+
+
+            //console.log(JSON.stringify(report));
             console.log('Elapsed load time: ' + this.pad(elapsed, 6) + 'ms');
-            console.log('   # of resources: ' + this.pad(resources.length-1, 8));
-            console.log('');
-            console.log(' Fastest resource: ' + this.pad(fastest.duration, 6) + 'ms; ' + this.truncate(fastest.url));
-            console.log(' Slowest resource: ' + this.pad(slowest.duration, 6) + 'ms; ' + this.truncate(slowest.url));
-            console.log('  Total resources: ' + this.pad(totalDuration, 6) + 'ms');
-            console.log('');
-            console.log('Smallest resource: ' + this.pad(smallest.size, 7) + 'b; ' + this.truncate(smallest.url));
-            console.log(' Largest resource: ' + this.pad(largest.size, 7) + 'b; ' + this.truncate(largest.url));
-            console.log('  Total resources: ' + this.pad(totalSize, 7) + 'b' + (missingSize ? '; (at least)' : ''));
-            if (config.verbose) {
-                console.log('');
-                var ths = this,
-                    length = 104,
-                    ratio = length / elapsed,
-                    bar;
-                resources.forEach(function (resource) {
-                    bar = ths.repeat(' ', (resource.times.request - start) * ratio) +
-                          ths.repeat('-', (resource.times.start - resource.times.request) * ratio) +
-                          ths.repeat('=', (resource.times.end - resource.times.start) * ratio)
-                    ;
-                    bar = bar.substr(0, length) + ths.repeat(' ', length - bar.length);
-                    console.log(ths.pad(resource.id, 3) + '|' + bar + '|');
-                });
-                console.log('');
-                resources.forEach(function (resource) {
-                    console.log(
-                        ths.pad(resource.id, 3) + ': ' +
-                        ths.pad(resource.duration, 6) + 'ms; ' +
-                        ths.pad(resource.size, 7) + 'b; ' +
-                        ths.truncate(resource.url, 84)
-                    );
-                });
+
+            if(phantom.args.indexOf('csv') >= 0){
+                this.printToFile(config,report,'confess-report','csv',phantom.args.indexOf('wipe') >= 0);
             }
+
+            if(phantom.args.indexOf('json') >= 0){
+                this.printToFile(config,report,'confess-report','json',phantom.args.indexOf('wipe') >= 0);
+            }
+
+//            if (config.verbose) {
+//                console.log('');
+//                var ths = this,
+//                    length = 104,
+//                    ratio = length / elapsed,
+//                    bar;
+//                resources.forEach(function (resource) {
+//                    bar = ths.repeat(' ', (resource.times.request - start) * ratio) +
+//                        ths.repeat('-', (resource.times.start - resource.times.request) * ratio) +
+//                        ths.repeat('=', (resource.times.end - resource.times.start) * ratio)
+//                    ;
+//                    bar = bar.substr(0, length) + ths.repeat(' ', length - bar.length);
+//                    console.log(ths.pad(resource.id, 3) + '|' + bar + '|');
+//                });
+//                console.log('');
+//                resources.forEach(function (resource) {
+//                    console.log(
+//                        ths.pad(resource.id, 3) + ': ' +
+//                            ths.pad(resource.duration, 6) + 'ms; ' +
+//                            ths.pad(resource.size, 7) + 'b; ' +
+//                            ths.truncate(resource.url, 84)
+//                    );
+//                });
+//            }
+
         }
+
+
     },
 
-    appcache: {
-        resourceUrls: {},
-        onResourceRequested: function (page, config, request) {
-            if (config.appcache.urlsFromRequests) {
-                this.appcache.resourceUrls[request.url] = true;
-            }
+    filmstrip: {
+        onInitialized: function(page, config) {
+            this.screenshot(new Date().getTime(),page);
         },
-        onLoadFinished: function (page, config, status) {
-            if (status!='success') {
-                console.log('# FAILED TO LOAD');
-                return;
+        onLoadStarted: function (page, config) {
+            if (!this.performance.start) {
+                this.performance.start = new Date().getTime();
             }
-
-            var key, key2, url,
-                neverMatch = "(?!a)a",
-                cacheRegex = new RegExp(config.appcache.cacheFilter || neverMatch),
-                networkRegex = new RegExp(config.appcache.networkFilter || neverMatch);
-
-            console.log('CACHE MANIFEST');
-            console.log('');
-            console.log('# Time: ' + new Date());
-            if (config.verbose) {
-                console.log('# This manifest was created by confess.js, http://github.com/jamesgpearce/confess');
-                console.log('#');
-                console.log('# Retrieved URL: ' + this.getFinalUrl(page));
-                console.log('# User-agent: ' + page.settings.userAgent);
-                console.log('#');
-                this.emitConfig(config, '# ');
-            }
-            console.log('');
-            console.log('CACHE:');
-
-            if (config.appcache.urlsFromDocument) {
-                for (url in this.getResourceUrls(page)) {
-                    this.appcache.resourceUrls[url] = true;
-                }
-            }
-            for (url in this.appcache.resourceUrls) {
-                if (cacheRegex.test(url) && !networkRegex.test(url)) {
-                    console.log(url);
-                }
-            };
-            console.log('');
-            console.log('NETWORK:');
-            console.log('*');
-        }
-    },
-
-    cssproperties: {
-        resourceUrls: {},
-        onResourceRequested: function (page, config, request) {
-            if (config.appcache.urlsFromRequests) {
-                this.appcache.resourceUrls[request.url] = true;
-            }
+            this.screenshot(new Date().getTime(),page);
         },
+        onResourceRequested: function (page, config, request) {
+            this.screenshot(new Date().getTime(),page);
+        },
+        onResourceReceived: function (page, config, response) {
+            this.screenshot(new Date().getTime(),page);
+        },
+
         onLoadFinished: function (page, config, status) {
-            if (status!='success') {
-                console.log('# FAILED TO LOAD');
-                return;
-            }
-            if (config.verbose) {
-                console.log('');
-                this.emitConfig(config, '');
-            }
-            console.log('');
-            console.log('CSS properties used:');
-            for (property in this.getCssProperties(page)) {
-                console.log(property);
-            }
+            this.screenshot(new Date().getTime(),page);
         }
     },
 
@@ -226,148 +235,34 @@ var confess = {
         });
     },
 
-    getResourceUrls: function (page) {
-        return page.evaluate(function () {
-            var
-                // resources referenced in DOM
-                // notable exceptions: iframes, rss, links
-                selectors = [
-                    ['script', 'src'],
-                    ['img', 'src'],
-                    ['link[rel="stylesheet"]', 'href']
-                ],
-
-                resources = {},
-                baseScheme = document.location.toString().split("//")[0],
-                tallyResource = function (url) {
-                    if (url && url.substr(0,5)!='data:') {
-                        if (url.substr(0, 2)=='//') {
-                            url = baseScheme + url;
-                        }
-                        if (!resources[url]) {
-                            resources[url] = 0;
-                        }
-                        resources[url]++;
-                    }
-                },
-
-                elements, elementsLength, e,
-                stylesheets, stylesheetsLength, ss,
-                rules, rulesLength, r,
-                style, styleLength, s,
-                computed, computedLength, c,
-                value;
-
-            // attributes in DOM
-            selectors.forEach(function (selectorPair) {
-                elements = document.querySelectorAll(selectorPair[0]);
-                for (e = 0, elementsLength = elements.length; e < elementsLength; e++) {
-                    tallyResource(elements[e].getAttribute(selectorPair[1]));
-                };
-            });
-
-            // URLs in stylesheets
-            stylesheets = document.styleSheets;
-            for (ss = 0, stylesheetsLength = stylesheets.length; ss < stylesheetsLength; ss++) {
-                rules = stylesheets[ss].rules;
-                if (!rules) { continue; }
-                for (r = 0, rulesLength = rules.length; r < rulesLength; r++) {
-                    if (!rules[r]['style']) { continue; }
-                    style = rules[r].style;
-                    for (s = 0, styleLength = style.length; s < styleLength; s++) {
-                        value = style.getPropertyCSSValue(style[s]);
-                        if (value && value.primitiveType == CSSPrimitiveValue.CSS_URI) {
-                            tallyResource(value.getStringValue());
-                        }
-                    }
-                };
-            };
-
-            // URLs in styles on DOM
-            elements = document.querySelectorAll('*');
-            for (e = 0, elementsLength = elements.length; e < elementsLength; e++) {
-                computed = elements[e].ownerDocument.defaultView.getComputedStyle(elements[e], '');
-                for (c = 0, computedLength = computed.length; c < computedLength; c++) {
-                    value = computed.getPropertyCSSValue(computed[c]);
-                    if (value && value.primitiveType == CSSPrimitiveValue.CSS_URI) {
-                        tallyResource(value.getStringValue());
-                    }
-                }
-            };
-
-            return resources;
-        });
-    },
-
-    getCssProperties: function (page) {
-        return page.evaluate(function () {
-            var properties = {},
-                tallyProperty = function (property) {
-                    if (!properties[property]) {
-                        properties[property] = 0;
-                    }
-                    properties[property]++;
-                },
-                stylesheets, stylesheetsLength, ss,
-                rules, rulesLength, r,
-                style, styleLength, s,
-                property;
-
-            // properties in stylesheets
-            stylesheets = document.styleSheets;
-            for (ss = 0, stylesheetsLength = stylesheets.length; ss < stylesheetsLength; ss++) {
-                rules = stylesheets[ss].rules;
-                if (!rules) { continue; }
-                for (r = 0, rulesLength = rules.length; r < rulesLength; r++) {
-                    if (!rules[r]['style']) { continue; }
-                    style = rules[r].style;
-                    for (s = 0, styleLength = style.length; s < styleLength; s++) {
-                        tallyProperty(style[s]);
-                    }
-                }
-            }
-
-            // properties in styles on DOM
-            elements = document.querySelectorAll('*');
-            for (e = 0, elementsLength = elements.length; e < elementsLength; e++) {
-                rules = elements[e].ownerDocument.defaultView.getMatchedCSSRules(elements[e], '');
-                if (!rules) { continue; }
-                for (r = 0, rulesLength = rules.length; r < rulesLength; r++) {
-                    if (!rules[r]['style']) { continue; }
-                    style = rules[r].style;
-                    for (s = 0, styleLength = style.length; s < styleLength; s++) {
-                        tallyProperty(style[s]);
-                    }
-                }
-            }
-            return properties;
-        });
-    },
-
     emitConfig: function (config, prefix) {
         console.log(prefix + 'Config:');
         for (key in config) {
-           if (config[key].constructor === Object) {
+            if (config[key].constructor === Object) {
                 if (key===config.task) {
                     console.log(prefix + ' ' + key + ':');
                     for (key2 in config[key]) {
                         console.log(prefix + '  ' + key2 + ': ' + config[key][key2]);
                     }
                 }
-           } else {
-               console.log(prefix + ' ' + key + ': ' + config[key]);
-           }
-       }
+            } else {
+                console.log(prefix + ' ' + key + ': ' + config[key]);
+            }
+        }
     },
 
     load: function (config, task, scope) {
         var page = new WebPage(),
+            pagetemp = new WebPage(),
             event;
-        if (config.consolePrefix) {
-            page.onConsoleMessage = function (msg, line, src) {
-                console.log(config.consolePrefix + ' ' + msg + ' (' + src + ', #' + line + ')');
-            }
-        }
+
+
+
+//        if (config.consolePrefix) {
+//            page.onConsoleMessage = function (msg, line, src) {
+//                console.log(config.consolePrefix + '---+++ ' + msg + ' (' + src + ', #' + line + ')');
+//            }
+//        }
         if (config.userAgent && config.userAgent != "default") {
             if (config.userAgentAliases[config.userAgent]) {
                 config.userAgent = config.userAgentAliases[config.userAgent];
@@ -375,7 +270,7 @@ var confess = {
             page.settings.userAgent = config.userAgent;
         }
         ['onInitialized', 'onLoadStarted', 'onResourceRequested', 'onResourceReceived']
-        .forEach(function (event) {
+            .forEach(function (event) {
             if (task[event]) {
                 page[event] = function () {
                     var args = [page, config],
@@ -385,6 +280,7 @@ var confess = {
                     }
                     task[event].apply(scope, args);
                 };
+
             }
         });
         if (task.onLoadFinished) {
@@ -393,26 +289,67 @@ var confess = {
                     setTimeout(
                         function () {
                             task.onLoadFinished.call(scope, page, config, status);
-                            phantom.exit();
                         },
                         config.wait
                     );
                 } else {
                     task.onLoadFinished.call(scope, page, config, status);
-                    phantom.exit();
                 }
+                phantom.exit();
+                //page.release();
+                page = new WebPage();
+                doPageLoad();
             };
         } else {
             page.onLoadFinished = function (status) {
                 phantom.exit();
-            }
+            };
         }
-        page.open(config.url);
+        page.settings.localToRemoteUrlAccessEnabled = true;
+        page.settings.webSecurityEnabled = false;
+        page.onConsoleMessage = function (msg) {
+            if (msg.indexOf('jserror-') >= 0){
+                confess.performance.evalConsoleErrors.push(msg.substring('jserror-'.length,msg.length));
+            }else{
+                if (msg.indexOf('interactive-') >= 0){
+                    confess.performance.evalConsole.interactive = msg.substring('interactive-'.length,msg.length);
+                } else if (msg.indexOf('complete-') >= 0){
+                    confess.performance.evalConsole.complete = msg.substring('complete-'.length,msg.length);
+                } else if (msg.indexOf('onload-') >= 0){
+                    confess.performance.evalConsole.onload = msg.substring('onload-'.length,msg.length);
+                }
+                //confess.performance.evalConsole.push(msg);
+            }
+        };
+
+        page.onError = function (msg, trace) {
+            //console.log("+++++  " + msg);
+            trace.forEach(function(item) {
+                confess.performance.evalConsoleErrors.push(msg + ':' + item.file + ':' + item.line);
+            })
+        };
+
+        function doPageLoad(){
+            setTimeout(function(){page.open(config.url);},config.cacheWait);
+        }
+
+        if(config.task == 'performancecache'){
+
+            pagetemp.open(config.url,function(status) {
+                if (status === 'success') {
+                    pagetemp.release();
+                    doPageLoad();
+                }
+            });
+        }else{
+            doPageLoad();
+        }
     },
 
     processArgs: function (config, contract) {
         var a = 0;
         var ok = true;
+
         contract.forEach(function(argument) {
             if (a < phantom.args.length) {
                 config[argument.name] = phantom.args[a];
@@ -435,7 +372,7 @@ var confess = {
 
     mergeConfig: function (config, configFile) {
         if (!fs.exists(configFile)) {
-           configFile = "config.json";
+            configFile = "config.json";
         }
         var result = JSON.parse(fs.read(configFile)),
             key;
@@ -469,6 +406,118 @@ var confess = {
         return str;
     },
 
-}
+    clone: function(obj) {
+        var target = {};
+        for (var i in obj) {
+            if (obj.hasOwnProperty(i)) {
+                target[i] = obj[i];
+            }
+        }
+        return target;
+    },
+
+    timerStart: function () {
+        return (new Date()).getTime();
+    },
+
+    timerEnd: function (start) {
+        return ((new Date()).getTime() - start);
+    },
+
+    /*worker: function(now,page){
+        var currentTime = now - this.performance.start;
+        var ths = this;
+
+
+        if((currentTime) >= this.performance.count1){
+            var worker = new Worker('file:///Users/wesleyhales/phantom-test/worker.js');
+            worker.addEventListener('message', function (event) {
+                //getting errors after 3rd thread with...
+                //_this.workerTask.callback(event);
+                //mycallback(event);
+                console.log('message' + event.data);
+            }, false);
+            worker.postMessage(page);
+            this.performance.count2++;
+            this.performance.count1 = currentTime + (this.performance.count2 * 100);
+        }
+    },*/
+
+    screenshot: function(now,page){
+        var start = this.timerStart();
+        var currentTime = now - this.performance.start;
+        var ths = this;
+        if((currentTime) >= this.performance.count1){
+            //var ashot = page.renderBase64();
+            page.render('filmstrip/screenshot' + this.performance.timer + '.png');
+            this.performance.count2++;
+            this.performance.count1 = currentTime + (this.performance.count2 * 100);
+            //subtract the time it took to render this image
+            this.performance.timer = this.timerEnd(start) - this.performance.count1;
+        }
+    },
+
+    printToFile: function(config,report,filename,extension,createNew) {
+        var f, myfile,
+            keys = [], values = [];
+        for(var key in report)
+        {
+            if(report.hasOwnProperty(key))
+            {
+                keys.push(key);
+                values.push(report[key]);
+            }
+        }
+        if(phantom.args[3]){
+            myfile = 'reports/' + filename + '-' + phantom.args[3] + '.' + extension;
+        }else{
+            myfile = 'reports/' + filename + '.' + extension;
+
+        }
+
+        if(!createNew && fs.exists(myfile)){
+            //file exists so append line
+            try{
+                if(extension === 'json'){
+                    var phantomLog = [];
+                    var tempLine = JSON.parse(fs.read(myfile));
+                    if(Object.prototype.toString.call( tempLine ) === '[object Array]'){
+                        phantomLog = tempLine;
+                    }
+                    phantomLog.push(report);
+                    fs.remove(myfile);
+                    f = fs.open(myfile, "w");
+                    f.writeLine(JSON.stringify(phantomLog));
+                    f.close();
+                }else{
+                    f = fs.open(myfile, "a");
+                    f.writeLine(values);
+                    f.close();
+                }
+
+            } catch (e) {
+                console.log("problem appending to file",e);
+            }
+        }else{
+            if(fs.exists(myfile)){
+                fs.remove(myfile);
+            }
+            //write the headers and first line
+            try {
+                f = fs.open(myfile, "w");
+                if(extension === 'json'){
+                    f.writeLine(JSON.stringify(report));
+                }else{
+                    f.writeLine(keys);
+                    f.writeLine(values);
+                }
+                f.close();
+            } catch (e) {
+                console.log("problem writing to file",e);
+            }
+        }
+    }
+
+};
 
 confess.run();
