@@ -56,7 +56,7 @@ page.open(address, function (status) {
 });
 
 function printToFile(data) {
-    var f,html, myfile, fileid,
+    var f, g,html, myfile, fileid, myjson,
         keys = [], values = [], extension = 'html';
 
     if(!phantom.args[1]){
@@ -67,7 +67,7 @@ function printToFile(data) {
     }
 
     myfile = 'speedreports/' + fileid + '.' + extension;
-
+    myjson = fileid + '.js';
 
 
 
@@ -77,17 +77,24 @@ function printToFile(data) {
     //write the headers and first line
     try {
         f = fs.open(myfile, "w");
-        html = fs.read('speedreport.html');
+        g = fs.open(myjson, "w");
+        g.writeLine('var reportdata = ' + data + ';');
+        g.close();
 
+
+        html = fs.read('speedreport.html');
         f.writeLine(html);
-        f.writeLine('$j(document).ready(function () {var reportdata = ' + data + ';' +
+        f.writeLine('<script src=\"' + myjson + '\"></script><script>');
+        f.writeLine('$j(document).ready(function () {' +
                                                     'var p = new PageModel(reportdata);' +
                                                     'ko.applyBindings(p);' +
                                                     '});');
-        f.writeLine('</script></body></html>');
-//            f.writeLine(data);
+        f.writeLine('</script>' +
+                    '</body></html>');
+
 
         f.close();
+
     } catch (e) {
         console.log("problem writing to file",e);
     }
