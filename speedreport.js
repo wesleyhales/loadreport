@@ -87,7 +87,7 @@ function printToFile(data) {
         if(phantom.args[1]){
             f.writeLine('<script src=\"\/rest\/performance\/js\?uuid\=' + myjson + '\"></script>');
         }else{
-            f.writeLine('<script src=\"' + myjson + '\"></script>');
+            f.writeLine('<script src=\"' + myjson + '\.js"></script>');
         }
 
         f.writeLine('\<script\>$j(document).ready(function () {' +
