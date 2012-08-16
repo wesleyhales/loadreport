@@ -56,7 +56,7 @@ page.open(address, function (status) {
 });
 
 function printToFile(data) {
-    var f, g,html, myfile, fileid, myjson,
+    var f, g,html, myfile, fileid, myjson, jspath,
         keys = [], values = [], extension = 'html';
 
     if(!phantom.args[1]){
@@ -67,7 +67,7 @@ function printToFile(data) {
     }
 
     myfile = 'speedreports/' + fileid + '.' + extension;
-    myjson = fileid + '.js';
+    myjson = fileid;
 
 
 
@@ -77,15 +77,20 @@ function printToFile(data) {
     //write the headers and first line
     try {
         f = fs.open(myfile, "w");
-        g = fs.open(myjson, "w");
+        g = fs.open('speedreports/' + myjson  + '.js', "w");
         g.writeLine('var reportdata = ' + data + ';');
         g.close();
 
 
         html = fs.read('speedreport.html');
         f.writeLine(html);
-        f.writeLine('<script src=\"' + myjson + '\"></script><script>');
-        f.writeLine('$j(document).ready(function () {' +
+        if(phantom.args[1]){
+            f.writeLine('<script src=\"\/rest\/performance\/js\?uuid\=' + myjson + '\"></script>');
+        }else{
+            f.writeLine('<script src=\"' + myjson + '\"></script>');
+        }
+
+        f.writeLine('\<script\>$j(document).ready(function () {' +
                                                     'var p = new PageModel(reportdata);' +
                                                     'ko.applyBindings(p);' +
                                                     '});');
