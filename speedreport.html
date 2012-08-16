@@ -1,0 +1,318 @@
+<!doctype html>
+
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9;IE=8;IE=7;">
+    <script src="http://z.cdn.turner.com/cnn/.e/js/libs/knockout-2.1.0.js"></script>
+    <script src="http://z.cdn.turner.com/cnn/.e/js/libs/jquery-1.7.2.min.js"></script>
+    <script src="http://omnipotent.net/jquery.sparkline/2.0/jquery.sparkline.min.js"></script>
+</head>
+<body>
+<style>
+    .asset_graph {
+        height: 20px;
+        line-height: 20px;
+    }
+
+    time.time_long {
+        display: inline-block;
+        width: 180px;
+        text-align: right;
+    }
+
+    span.url {
+        display: inline;
+        overflow: hidden;
+    }
+
+    .bigGraph {
+        position: relative;
+        width: 100%;
+        height: 200px;
+        margin: 4px;
+    }
+
+    .graphs {
+        width: 60%;
+        float: left;
+    }
+
+    .snapshot {
+        width: 30%;
+        float: left;
+    }
+</style>
+<h1 data-bind="text:url"></h1>
+
+<div class="graphs">
+    <div class="bigGraph">
+        <h2>Stacked</h2>
+        <h4>Size, in bytes, of the download</h4>
+        <span data-bind="sparkline: stacked, sparklineOptions:{type: 'bar', width:'100%', height: 100, barWidth:'10px',barSpacing:'1px',tooltipFormatter: tooltipFormatterStacked}">Loading...</span>
+    </div>
+    <div class="bigGraph">
+        <h2>Blocking</h2>
+        <h4>Time spend blocking before the request is made</h4>
+        <span data-bind="sparkline: blockings, sparklineOptions:{type: 'bar', barColor:'#3366cc', width:'100%', height: 100, barWidth:'10px',barSpacing:'1px', tooltipFormatter: tooltipFormatter}">Loading...</span>
+    </div>
+    <div class="bigGraph">
+        <h2>Latency</h2>
+        <h4>Time elapsed from when the request is made until the initial response is received</h4>
+        <span data-bind="sparkline: latencies, sparklineOptions:{type: 'bar', barColor:'#dc3912', width:'100%', height: 100, barWidth:'10px',barSpacing:'1px', tooltipFormatter: tooltipFormatter}">Loading...</span>
+    </div>
+    <div class="bigGraph">
+        <h2>Download Time</h2>
+        <h4>Time elapsed from the first byte received to the last byte received </h4>
+        <span data-bind="sparkline: downloadTimes, sparklineOptions:{type: 'bar', barColor:'#ff9900', width:'100%', height: 100, barWidth:'10px',barSpacing:'1px', tooltipFormatter: tooltipFormatter}">Loading...</span>
+    </div>
+    <div class="bigGraph">
+        <h2>Asset duration</h2>
+        <h4>Total elapsed time from request to completion</h4>
+        <span data-bind="sparkline: durations, sparklineOptions:{type: 'bar', barColor:'#109618', width:'100%', height: 100, barWidth:'10px',barSpacing:'1px', tooltipFormatter: tooltipFormatter}">Loading...</span>
+    </div>
+    <div class="bigGraph">
+        <h2>Asset size</h2>
+        <h4>Size, in bytes, of the download</h4>
+        <span data-bind="sparkline: sizes, sparklineOptions:{type: 'bar', width:'100%', height: 100, barWidth:'10px',barSpacing:'1px', tooltipFormatter: tooltipFormatterBytes}">Loading...</span>
+    </div>
+</div>
+<div class="" style="float:none;clear:both;">&nbsp;</div>
+<h2>Individual Asset breakdown</h2>
+
+<div data-bind="foreach:assets()">
+    <div class="asset_graph">
+				<span class="graph" data-bind="sparkline: [1000, $data.blocking()+$data.duration(),$root.duration(), $data.latency()+$data.duration(), $data.latency()+$data.downloadTime(),$data.latency()], 
+					sparklineOptions:{type: 'bullet', chartRangeMinX:$root.startTime(), chartRangeMaxX:$root.endTime(),  width: 300, height: '20px', rangeColors:['#ffffff','#dc3912','#ff9900','#109618'],tooltipFormatter:function(el, o, v){return $data.tooltip()+'<br/>'+JSON.stringify(v);}}"></span>
+        <span data-bind="text:id" class=""></span>:&nbsp;
+        <span data-bind="text:url" class="url"></span>
+        <!--<span data-bind="text:duration" class="time_long"></span>
+                  <span data-bind="text:latency" class="time_long"></span>
+                  <time data-bind="text:startTime" class="time_long"></time>
+                  <time data-bind="text:endTime" class="time_long"></time>-->
+    </div>
+</div>
+<script>
+    // ES5 15.4.4.21
+    // http://es5.github.com/#x15.4.4.21
+    // https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Objects/Array/reduce
+    if (!Array.prototype.reduce) {
+        Array.prototype.reduce = function reduce(fun /*, initial*/) {
+            var self = toObject(this),
+                    length = self.length >>> 0;
+
+            // If no callback function or if callback is not a callable function
+            if (_toString(fun) != "[object Function]") {
+                throw new TypeError(fun + " is not a function");
+            }
+
+            // no value to return if no initial value and an empty array
+            if (!length && arguments.length == 1) {
+                throw new TypeError('reduce of empty array with no initial value');
+            }
+
+            var i = 0;
+            var result;
+            if (arguments.length >= 2) {
+                result = arguments[1];
+            } else {
+                do {
+                    if (i in self) {
+                        result = self[i++];
+                        break;
+                    }
+
+                    // if array contains no values, no initial value to return
+                    if (++i >= length) {
+                        throw new TypeError('reduce of empty array with no initial value');
+                    }
+                } while (true);
+            }
+
+            for (; i < length; i++) {
+                if (i in self) {
+                    result = fun.call(void 0, result, self[i], i, self);
+                }
+            }
+
+            return result;
+        };
+    }
+    ko.bindingHandlers.sparkline = {
+        update:function (element, valueAccessor, allBindingsAccessor, viewModel) {
+            var value = ko.utils.unwrapObservable(valueAccessor());
+            var options = allBindingsAccessor().sparklineOptions || {};
+            $j(element).sparkline(value, options);
+        }
+    };
+    function HTTPEventModel(r) {
+        r = r || {};
+        var that = this;
+        that.id = ko.observable(r.id);
+        that.headers = ko.observableArray(r.headers);
+        that.time = ko.observable(r.time);
+        that.url = ko.observable(r.url);
+        that.milliseconds = ko.computed(function () {
+            return Date.parse(that.time())
+        }, that);
+        return that;
+    }
+    function RequestModel(r) {
+        r = r || {};
+        var that = new HTTPEventModel(r);
+        that.method = ko.observable(r.method);
+        return that;
+    }
+    ;
+    function ResponseModel(r) {
+        r = r || {};
+        var that = new HTTPEventModel(r);
+        that.received = ko.observable(Date.parse(r.received || r.time));
+        that.bodySize = ko.observable(r.bodySize || 0);
+        that.contentType = ko.observable(r.contentType || "text/html; charset=UTF-8");
+        that.redirectURL = ko.observable(r.redirectURL);
+        that.stage = ko.observable(r.stage || "start");
+        that.status = ko.observable(r.status || 200);
+        that.statusText = ko.observable(r.statusText || "OK");
+        return that;
+    }
+    ;
+    function AssetModel(req, res) {
+        if (req.id !== res.id || req.url !== res.url) {
+            throw "error";
+        }
+        var that = this;
+        that.request = ko.observable(new RequestModel(req));
+        that.response = ko.observable(new ResponseModel(res));
+        that.id = ko.observable(req.id);
+        that.url = ko.observable(/([^?#&\s]+)/.exec(req.url)[1]);
+        that.startTime = ko.computed(function () {
+            return this.request().milliseconds()
+        }, that);
+        that.receivedTime = ko.computed(function () {
+            return this.response().received()
+        }, that);
+        that.endTime = ko.computed(function () {
+            return this.response().milliseconds()
+        }, that);
+        that.duration = ko.computed(function () {
+            return this.endTime() - this.startTime()
+        }, that);
+        that.downloadTime = ko.computed(function () {
+            return this.endTime() - this.receivedTime()
+        }, that);
+        that.blocking = ko.observable();
+        that.latency = ko.computed(function () {
+            return this.receivedTime() - this.startTime()
+        }, that);
+        that.tooltip = ko.computed(function () {
+            var tip = that.url();
+            if (tip.length > 120)tip = tip.substring(0, 120) + '...';
+            tip += ' \n(' + that.response().bodySize() + ' bytes)';
+            return tip;
+        }, that);
+    }
+    function PageModel(r) {
+        r = r || {};
+        var that = new RequestModel(r), assets = r.assets.sort(function (a, b) {
+            return (a.request.id !== b.request.id) ? a.request.id - b.request.id : ((a.response.stage === 'end') ? 1 : -1);
+        });
+        that.startTime = ko.observable(r.requestTime);
+        that.endTime = ko.observable(r.responseTime);
+        that.assets = ko.observableArray([]);
+        that.duration = ko.computed(function () {
+            return that.endTime() - that.startTime()
+        });
+
+        for (var a = 0, al = assets.length; a < al; a++) {
+            var raa = r.assets[a], asset = new AssetModel(raa.request, raa.response);
+            asset.blocking(asset.startTime() - that.startTime());
+            that.assets.push(asset);
+        }
+        that.urls = ko.computed(function () {
+            return that.assets().reduce(function (result, current, index, array) {
+                result.push(current.url());
+                return result;
+            }, [])
+        });
+        that.blockings = ko.computed(function () {
+            return that.assets().reduce(function (result, current, index, array) {
+                result.push(current.blocking());
+                return result;
+            }, [])
+        });
+        that.latencies = ko.computed(function () {
+            return that.assets().reduce(function (result, current, index, array) {
+                result.push(current.latency());
+                return result;
+            }, [])
+        });
+        that.downloadTimes = ko.computed(function () {
+            return that.assets().reduce(function (result, current, index, array) {
+                result.push(current.downloadTime());
+                return result;
+            }, [])
+        });
+        that.durations = ko.computed(function () {
+            return that.assets().reduce(function (result, current, index, array) {
+                result.push(current.duration());
+                return result;
+            }, [])
+        });
+        that.stacked = ko.computed(function () {
+            return that.assets().reduce(function (result, current, index, array) {
+                result.push([current.blocking(), current.latency(), current.downloadTime(), current.duration()]);
+                return result;
+            }, [])
+        });
+        that.sizes = ko.computed(function () {
+            return that.assets().reduce(function (result, current, index, array) {
+                result.push(current.response().bodySize());
+                return result;
+            }, [])
+        });
+        that.tooltipFormatter = function (el, o, v) {
+            var tooltip = "";
+            if (v) {
+                tooltip = that.assets()[v[0].offset].tooltip() + ': ' + v[0].value + 'ms';
+            }
+            return tooltip;
+        };
+        that.tooltipFormatterBytes = function (el, o, v) {
+            var tooltip = "";
+            if (v) {
+                tooltip = that.assets()[v[0].offset].tooltip() + ': ' + v[0].value + ' bytes';
+            }
+            return tooltip;
+        };
+        that.tooltipFormatterStacked = function (el, o, v) {
+            var tooltip = "", asset = that.assets()[v[0].offset];
+            //console.log(v);
+            if (v) {
+                tooltip = asset.tooltip() + ':'
+                        + '<br/>Blocking: ' + v[3].value + 'ms'
+                        + '<br/>Latency: ' + v[2].value + 'ms'
+                        + '<br/>Download Time: ' + v[1].value + 'ms'
+                        + '<br/>Duration: ' + v[0].value + 'ms'
+            }
+            return tooltip;
+        };
+        //that.assets.sort(function(a,b){return a.id()-b.id();});
+        return that;
+    }
+    ;
+    var r = new RequestModel({
+        "headers":[
+            {
+                "name":"User-Agent",
+                "value":"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.6.0 Safari/534.34"
+            },
+            {
+                "name":"Accept",
+                "value":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            }
+        ],
+        "id":1,
+        "method":"GET",
+        "time":"2012-07-21T20:39:15.849Z",
+        "url":"http://www.cnn.com/"
+    });

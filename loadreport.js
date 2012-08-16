@@ -151,6 +151,7 @@ var confess = {
             }
 
             var report = {};
+            report.url = phantom.args[0];
             report.phantomCacheEnabled = phantom.args.indexOf('yes') >= 0 ? 'yes' : 'no';
             report.taskName = config.task;
             var drsi = parseInt(this.performance.evalConsole.interactive);
