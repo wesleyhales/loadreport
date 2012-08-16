@@ -154,11 +154,11 @@ var confess = {
             report.phantomCacheEnabled = phantom.args.indexOf('yes') >= 0 ? 'yes' : 'no';
             report.taskName = config.task;
             var drsi = parseInt(this.performance.evalConsole.interactive);
-            report.domReadystateInteractive = isNaN(drsi) == false ? drsi : this.performance.evalConsole.interactive;
+            report.domReadystateInteractive = isNaN(drsi) == false ? drsi : 0;
             var wo = parseInt(this.performance.evalConsole.onload);
-            report.windowOnload = isNaN(wo) == false ? wo : this.performance.evalConsole.onload;
+            report.windowOnload = isNaN(wo) == false ? wo : 0;
             var drsc = parseInt(this.performance.evalConsole.complete);
-            report.domReadystateComplete = isNaN(drsc) == false ? drsc : this.performance.evalConsole.complete;
+            report.domReadystateComplete = isNaN(drsc) == false ? drsc : 0;
             report.elapsedLoadTime = elapsed;
             report.numberOfResources = resources.length-1;
             report.totalResourcesTime = totalDuration;
