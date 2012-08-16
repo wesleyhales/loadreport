@@ -127,6 +127,7 @@ var confess = {
                 if (!fastest || resource.duration < fastest.duration) {
                     fastest = resource;
                 }
+                console.log(totalDuration);
                 totalDuration += resource.duration;
 
                 if (resource.size) {
@@ -152,12 +153,17 @@ var confess = {
             var report = {};
             report.phantomCacheEnabled = phantom.args.indexOf('yes') >= 0 ? 'yes' : 'no';
             report.taskName = config.task;
-            report.domReadyStateInteractive = isNaN(parseInt(this.performance.evalConsole.interactive)) == false ? parseInt(this.performance.evalConsole.interactive) : 0;
-            report.windowOnload = isNaN(parseInt(this.performance.evalConsole.onload)) == false ? parseInt(this.performance.evalConsole.onload) : 0;
-            report.domReadyStateComplete = isNaN(parseInt(this.performance.evalConsole.complete)) == false ? parseInt(this.performance.evalConsole.complete) : 0;
+            var drsi = parseInt(this.performance.evalConsole.interactive);
+            report.domReadystateInteractive = isNaN(drsi) == false ? drsi : this.performance.evalConsole.interactive;
+            var wo = parseInt(this.performance.evalConsole.onload);
+            report.windowOnload = isNaN(wo) == false ? wo : this.performance.evalConsole.onload;
+            var drsc = parseInt(this.performance.evalConsole.complete);
+            report.domReadystateComplete = isNaN(drsc) == false ? drsc : this.performance.evalConsole.complete;
             report.elapsedLoadTime = elapsed;
             report.numberOfResources = resources.length-1;
             report.totalResourcesTime = totalDuration;
+            report.slowestResource = slowest.url;
+            report.largestResource = largest.url;
             report.totalResourcesSize = (totalSize / 1000);
             report.nonReportingResources = missingList.length;
             report.timeStamp = now.getTime();
@@ -468,7 +474,7 @@ var confess = {
                 values.push(report[key]);
             }
         }
-        if(phantom.args[3]){
+        if(phantom.args[3] && phantom.args[3] != 'wipe'){
             myfile = 'reports/' + filename + '-' + phantom.args[3] + '.' + extension;
         }else{
             myfile = 'reports/' + filename + '.' + extension;
