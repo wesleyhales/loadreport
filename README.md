@@ -1,14 +1,15 @@
 # loadreport.js
+[PhantomJS](http://www.phantomjs.org/) 1.6+ is required to run loadreport.js or speedreport.js.
 
-todo
+loadreport will write, to csv or json (filmstrip writes to png):
+## loadreport Examples
 
-## Examples
-
-
-
-    > phantomjs loadreport.js http://functionsource.com performance csv
+    > phantomjs loadreport.js http://wesleyhales.com performance csv
     > phantomjs loadreport.js http://functionsource.com performancecache json
     > phantomjs loadreport.js http://functionsource.com filmstrip
 
+speedreport produces a json and html file which will display detailed resource charting
+## speedreport Examples
 
-...will write, to csv or json (filmstrip writes to png):
+    > phantomjs speedreport.js http://www.wesleyhales.com
+

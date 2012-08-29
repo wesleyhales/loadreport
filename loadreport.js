@@ -127,7 +127,7 @@ var confess = {
                 if (!fastest || resource.duration < fastest.duration) {
                     fastest = resource;
                 }
-                console.log(totalDuration);
+                //console.log(totalDuration);
                 totalDuration += resource.duration;
 
                 if (resource.size) {
