@@ -7,7 +7,7 @@ loadreport will write, to csv or json (filmstrip writes to png):
 ![loadreport filmstrip](https://raw.github.com/wesleyhales/loadreport/master/readme/cnn-loadreport.png)
     > phantomjs loadreport.js http://wesleyhales.com performancecache json
     > phantomjs loadreport.js http://wesleyhales.com filmstrip 
-![loadreport filmstrip](https://github.com/wesleyhales/loadreport/blob/master/readme/cnn-filmstrip.png)
+![loadreport filmstrip](https://raw.github.com/wesleyhales/loadreport/master/readme/cnn-filmstrip.png)
 
 speedreport produces a json and html file which will display detailed resource charting
 ## speedreport Examples
