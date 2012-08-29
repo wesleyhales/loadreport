@@ -5,8 +5,8 @@ loadreport will write, to csv or json (filmstrip writes to png):
 ## loadreport Examples
 
     > phantomjs loadreport.js http://wesleyhales.com performance csv
-    > phantomjs loadreport.js http://functionsource.com performancecache json
-    > phantomjs loadreport.js http://functionsource.com filmstrip
+    > phantomjs loadreport.js http://wesleyhales.com performancecache json
+    > phantomjs loadreport.js http://wesleyhales.com filmstrip
 
 speedreport produces a json and html file which will display detailed resource charting
 ## speedreport Examples
