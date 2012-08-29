@@ -1,6 +1,8 @@
 # loadreport.js
 [PhantomJS](http://www.phantomjs.org/) 1.6+ is required to run loadreport.js or speedreport.js.
 
+You can take it for a spin in [this live demo](http://loadreport.wesleyhales.com/report.html).
+
 ## loadreport Examples
 ### loadreport will write, to csv or json (filmstrip writes to png):
 * ``` phantomjs loadreport.js http://cnn.com performance csv ```
