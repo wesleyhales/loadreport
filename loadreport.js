@@ -379,6 +379,9 @@ var confess = {
 
     mergeConfig: function (config, configFile) {
         if (!fs.exists(configFile)) {
+            configFile = "loadreport/config.json";
+        }
+        if (!fs.exists(configFile)) {
             configFile = "config.json";
         }
         var result = JSON.parse(fs.read(configFile)),

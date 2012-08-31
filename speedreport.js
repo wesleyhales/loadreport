@@ -81,8 +81,11 @@ function printToFile(data) {
         g.writeLine('var reportdata = ' + data + ';');
         g.close();
 
-
-        html = fs.read('speedreport.html');
+        if(!fs.exists('speedreport.html')){
+            html = fs.read('loadreport/speedreport.html');
+        }else{
+            html = fs.read('speedreport.html');
+        }
         f.writeLine(html);
         if(phantom.args[1]){
             f.writeLine('<script src=\"\/rest\/performance\/js\?uuid\=' + myjson + '\"></script>');
