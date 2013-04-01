@@ -1,15 +1,17 @@
 var fs = require('fs');
-var confess = {
+var WebPage = require('webpage');
+
+var loadreport = {
 
     run: function () {
         var cliConfig = {};
-        confess.performancecache = this.clone(confess.performance);
+        loadreport.performancecache = this.clone(loadreport.performance);
         if (!this.processArgs(cliConfig, [
             {
                 name: 'url',
                 def: 'http://google.com',
                 req: true,
-                desc: 'the URL of the app to cache'
+                desc: 'the URL of the site to load test'
             }, {
                 name: 'task',
                 def: 'performance',
@@ -20,7 +22,7 @@ var confess = {
                 name: 'configFile',
                 def: 'config.json',
                 req: false,
-                desc: 'a local configuration file of further confess settings'
+                desc: 'a local configuration file of further loadreport settings'
             }
         ])) {
             //phantom.exit();
@@ -39,25 +41,49 @@ var confess = {
         evalConsole : {},
         evalConsoleErrors : [],
         onInitialized: function(page, config) {
-            var pageecal = page.evaluate(function(startTime) {
+            var pageeval = page.evaluate(function(startTime) {
                 var now = new Date().getTime();
+                //check the readystate within the page being loaded
 
+                //Returns "loading" while the document is loading
+                var _timer3=setInterval(function(){
+                    if(/loading/.test(document.readyState)){
+                        console.log('loading-' + (new Date().getTime() - startTime));
+                        //don't clear the interval until we get last measurement
+                    }
+                }, 5);
+
+                // "interactive" once it is finished parsing but still loading sub-resources
                 var _timer1=setInterval(function(){
                     if(/interactive/.test(document.readyState)){
-                        clearInterval(_timer1);
                         console.log('interactive-' + (new Date().getTime() - startTime));
+                        clearInterval(_timer1); 
+                        //clear loading interval
+                        clearInterval(_timer3); 
                     }
-                }, 10);
+                }, 5);
 
-                var _timer2=setInterval(function(){
-                    if(/loaded|complete/.test(document.readyState)){
-                        clearInterval(_timer2);
-                        console.log('complete-' + (new Date().getTime() - startTime));
-                    }
-                }, 10);
+                //"complete" once it has loaded - same as load event below
+                // var _timer2=setInterval(function(){
+                //     if(/complete/.test(document.readyState)){
+                //         console.log('complete-' + (new Date().getTime() - startTime));
+                //         clearInterval(_timer2);
+                //     }
+                // }, 5);
 
-                window.onload = function(){console.log('onload-' + (new Date().getTime() - startTime));};
+                //The DOMContentLoaded event is fired when the document has been completely 
+                //loaded and parsed, without waiting for stylesheets, images, and subframes 
+                //to finish loading
+                document.addEventListener("DOMContentLoaded", function() {
+                    console.log('DOMContentLoaded-' + (new Date().getTime() - startTime));
+                }, false);
 
+                //detect a fully-loaded page
+                window.addEventListener("load", function() {
+                    console.log('onload-' + (new Date().getTime() - startTime));
+                }, false);
+                
+                //check for JS errors
                 window.onerror = function(message, url, linenumber) {
                     console.log("jserror-JavaScript error: " + message + " on line " + linenumber + " for " + url);
                 };
@@ -155,11 +181,15 @@ var confess = {
             report.phantomCacheEnabled = phantom.args.indexOf('yes') >= 0 ? 'yes' : 'no';
             report.taskName = config.task;
             var drsi = parseInt(this.performance.evalConsole.interactive);
-            report.domReadystateInteractive = isNaN(drsi) == false ? drsi : 0;
+            var drsl = parseInt(this.performance.evalConsole.loading);
             var wo = parseInt(this.performance.evalConsole.onload);
+            // var drsc = parseInt(this.performance.evalConsole.complete);
+
+            report.domReadystateLoading = isNaN(drsl) == false ? drsl : 0;
+            report.domReadystateInteractive = isNaN(drsi) == false ? drsi : 0;
+            // report.domReadystateComplete = isNaN(drsc) == false ? drsc : 0;
             report.windowOnload = isNaN(wo) == false ? wo : 0;
-            var drsc = parseInt(this.performance.evalConsole.complete);
-            report.domReadystateComplete = isNaN(drsc) == false ? drsc : 0;
+            
             report.elapsedLoadTime = elapsed;
             report.numberOfResources = resources.length-1;
             report.totalResourcesTime = totalDuration;
@@ -177,37 +207,12 @@ var confess = {
             console.log('Elapsed load time: ' + this.pad(elapsed, 6) + 'ms');
 
             if(phantom.args.indexOf('csv') >= 0){
-                this.printToFile(config,report,'confess-report','csv',phantom.args.indexOf('wipe') >= 0);
+                this.printToFile(config,report,'loadreport','csv',phantom.args.indexOf('wipe') >= 0);
             }
 
             if(phantom.args.indexOf('json') >= 0){
-                this.printToFile(config,report,'confess-report','json',phantom.args.indexOf('wipe') >= 0);
+                this.printToFile(config,report,'loadreport','json',phantom.args.indexOf('wipe') >= 0);
             }
-
-//            if (config.verbose) {
-//                console.log('');
-//                var ths = this,
-//                    length = 104,
-//                    ratio = length / elapsed,
-//                    bar;
-//                resources.forEach(function (resource) {
-//                    bar = ths.repeat(' ', (resource.times.request - start) * ratio) +
-//                        ths.repeat('-', (resource.times.start - resource.times.request) * ratio) +
-//                        ths.repeat('=', (resource.times.end - resource.times.start) * ratio)
-//                    ;
-//                    bar = bar.substr(0, length) + ths.repeat(' ', length - bar.length);
-//                    console.log(ths.pad(resource.id, 3) + '|' + bar + '|');
-//                });
-//                console.log('');
-//                resources.forEach(function (resource) {
-//                    console.log(
-//                        ths.pad(resource.id, 3) + ': ' +
-//                            ths.pad(resource.duration, 6) + 'ms; ' +
-//                            ths.pad(resource.size, 7) + 'b; ' +
-//                            ths.truncate(resource.url, 84)
-//                    );
-//                });
-//            }
 
         }
 
@@ -259,17 +264,10 @@ var confess = {
     },
 
     load: function (config, task, scope) {
-        var page = new WebPage(),
-            pagetemp = new WebPage(),
+        var page = WebPage.create(),
+            pagetemp = WebPage.create(),
             event;
 
-
-
-//        if (config.consolePrefix) {
-//            page.onConsoleMessage = function (msg, line, src) {
-//                console.log(config.consolePrefix + '---+++ ' + msg + ' (' + src + ', #' + line + ')');
-//            }
-//        }
         if (config.userAgent && config.userAgent != "default") {
             if (config.userAgentAliases[config.userAgent]) {
                 config.userAgent = config.userAgentAliases[config.userAgent];
@@ -303,8 +301,8 @@ var confess = {
                     task.onLoadFinished.call(scope, page, config, status);
                 }
                 phantom.exit();
-                //page.release();
-                page = new WebPage();
+
+                page = WebPage.create();
                 doPageLoad();
             };
         } else {
@@ -315,24 +313,27 @@ var confess = {
         page.settings.localToRemoteUrlAccessEnabled = true;
         page.settings.webSecurityEnabled = false;
         page.onConsoleMessage = function (msg) {
+            console.log(msg)
             if (msg.indexOf('jserror-') >= 0){
-                confess.performance.evalConsoleErrors.push(msg.substring('jserror-'.length,msg.length));
+                loadreport.performance.evalConsoleErrors.push(msg.substring('jserror-'.length,msg.length));
             }else{
-                if (msg.indexOf('interactive-') >= 0){
-                    confess.performance.evalConsole.interactive = msg.substring('interactive-'.length,msg.length);
-                } else if (msg.indexOf('complete-') >= 0){
-                    confess.performance.evalConsole.complete = msg.substring('complete-'.length,msg.length);
+                if (msg.indexOf('loading-') >= 0){
+                    loadreport.performance.evalConsole.loading = msg.substring('loading-'.length,msg.length);
+                } else if (msg.indexOf('interactive-') >= 0){
+                    loadreport.performance.evalConsole.interactive = msg.substring('interactive-'.length,msg.length);
+                // } else if (msg.indexOf('complete-') >= 0){
+                //     loadreport.performance.evalConsole.complete = msg.substring('complete-'.length,msg.length);
                 } else if (msg.indexOf('onload-') >= 0){
-                    confess.performance.evalConsole.onload = msg.substring('onload-'.length,msg.length);
+                    loadreport.performance.evalConsole.onload = msg.substring('onload-'.length,msg.length);
                 }
-                //confess.performance.evalConsole.push(msg);
+                //loadreport.performance.evalConsole.push(msg);
             }
         };
 
         page.onError = function (msg, trace) {
             //console.log("+++++  " + msg);
             trace.forEach(function(item) {
-                confess.performance.evalConsoleErrors.push(msg + ':' + item.file + ':' + item.line);
+                loadreport.performance.evalConsoleErrors.push(msg + ':' + item.file + ':' + item.line);
             })
         };
 
@@ -530,4 +531,4 @@ var confess = {
 
 };
 
-confess.run();
+loadreport.run();
