@@ -1,23 +1,22 @@
-var fs = require('fs');
-var page = require('webpage').create(),
-    t, address=phantom.args[0]||encodeURI(address)+'.txt', output=phantom.args[1]||encodeURI(address)+'.jpg',requests={}, responses={}, pageInfo={url:address, assets:[]};
+var fs = require('fs')
+    , page = require('webpage').create()
+    , t
+    , address=phantom.args[0]
+    , requests={}
+    , responses={}
+    , pageInfo={url:address, assets:[]};
 
 if (phantom.args.length === 0) {
-    //console.log('Usage: loadspeed.js <some URL>');
+    console.log('Usage: speedreport.js <URL>');
     phantom.exit();
 }
 page.onResourceRequested = function (r) {
-    //console.log('Request ' + JSON.stringify(r, undefined, 4));
     if(r)requests[r.id]=r;
 };
 page.onResourceReceived = function (r) {
-    //console.log('Receive ' + JSON.stringify(r, undefined, 4));
-    //phantom.exit();
     if(r && !(r.id in responses)){
         responses[r.id]=r;
-        //console.log('/* '+r.stage+' */');
     } else {
-        //r.bodySize=responses[r.id].bodySize;
         for(var i in responses[r.id]){
             if(responses[r.id].hasOwnProperty(i) && !(i in r)){
                 r[i]=responses[r.id][i];
@@ -29,83 +28,85 @@ page.onResourceReceived = function (r) {
             response:r
         });
     }
-    //var start=Date.parse(requests[r.id].time),end=Date.parse(r.time)
-    //console.log((end-start)+'ms',r.status, r.url.substring(0,50));
 };
+page.onError=function(){
+    console.error("error");
+    console.dir(arguments);
+}
 t = Date.now();
-address = phantom.args[0];
 page.open(address, function (status) {
     pageInfo.requestTime=t;
     pageInfo.responseTime=Date.now();
     if (status !== 'success') {
-        console.log('/* FAIL to load the address */');
+        console.error('/* FAIL to load the address */');
     } else {
         t = Date.now() - t;
-        page.evaluateAsync(function(){
-            console.log("last chance");
-            window.onload=function(){console.log(Date.now())};
-        });
-        printToFile(JSON.stringify(pageInfo, undefined, 4));
-        //page.render(output);
-        /*for(var r in requests){
-         var start=Date.parse(requests[r].time),end=Date.parse(responses[r].time)
-         console.log((end-start)+'ms',responses[r].status, r.substring(0,50));
-         }*/
+        try {
+            var data=JSON.stringify(pageInfo, undefined, 4)
+            printToFile(data);
+        }catch(e){
+            console.error("error writing to file ",e);
+        }
     }
     phantom.exit();
 });
 
 function printToFile(data) {
-    var f, g,html, myfile, fileid, myjson, jspath,
-        keys = [], values = [], extension = 'html';
+    var f
+        , g
+        , html
+        , myfile
+        , fileid
+        , myjson
+        , jspath
+        , keys = []
+        , values = []
+        , extension = 'html';
 
     if(!phantom.args[1]){
         fileid = phantom.args[0].replace('http://','').replace('https://','').replace(/\//g,'');
         fileid = fileid.split('?')[0];
+        myjson = 'speedreports/' + fileid + '.js';
+        myfile = 'speedreports/' + fileid + '.' + extension;
     }else{
         fileid = phantom.args[1];
+        myjson = fileid;
+        myfile = null;
     }
 
-    myfile = 'speedreports/' + fileid + '.' + extension;
-    myjson = fileid;
-
-
-
-    if(fs.exists(myfile)){
-        fs.remove(myfile);
+    if(myfile!==null){
+        try {
+            data = "var reportdata = " + data + ";";
+    		if(fs.exists(myfile)){
+    		    fs.remove(myfile);
+    		}
+            if(!fs.exists('speedreport.html')){
+                html = fs.read('loadreport/speedreport.html');
+            }else{
+                html = fs.read('speedreport.html');
+            }
+            if(phantom.args[1]){
+                html=html.replace('{{REPORT_DATA_URI}}', '\/rest\/performance\/js\?uuid\=' + myjson);
+            }else{
+                html=html.replace('{{REPORT_DATA_URI}}', fileid + '.js');
+            }
+            html=html.replace('{{url}}', phantom.args[0]);
+            f = fs.open(myfile, "w");
+            f.write(html);
+            f.flush();
+            f.close();
+        } catch (e) {
+            console.log("problem writing to file",e);
+        }
     }
-    //write the headers and first line
+
     try {
-        f = fs.open(myfile, "w");
-        g = fs.open('speedreports/' + myjson  + '.js', "w");
-        g.writeLine('var reportdata = ' + data + ';');
+        g = fs.open(myjson, "w");
+        g.write(data);
+        g.flush();
         g.close();
-
-        if(!fs.exists('speedreport.html')){
-            html = fs.read('loadreport/speedreport.html');
-        }else{
-            html = fs.read('speedreport.html');
-        }
-        f.writeLine(html);
-        if(phantom.args[1]){
-            f.writeLine('<script src=\"\/rest\/performance\/js\?uuid\=' + myjson + '\"></script>');
-        }else{
-            f.writeLine('<script src=\"' + myjson + '\.js"></script>');
-        }
-
-        f.writeLine('\<script\>$j(document).ready(function () {' +
-                                                    'var p = new PageModel(reportdata);' +
-                                                    'ko.applyBindings(p);' +
-                                                    '});');
-        f.writeLine('</script>' +
-                    '</body></html>');
-
-
-        f.close();
-
     } catch (e) {
-        console.log("problem writing to file",e);
+        console.error("problem writing to file",e);
     }
-
 }
 
