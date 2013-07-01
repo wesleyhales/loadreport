@@ -28,10 +28,13 @@ function makeTimeout(){
     var min = d.getMinutes();
     var sec = d.getSeconds();
 
-    if((min == '00') && (sec == '00'))
+    if((min == '00') && (sec == '00')) {
         runLoadreport();
-    else
+    } else {
         setTimeout(runLoadreport, (60*(60-min)+(60-sec))*1000);
+    }
+        
+    increment++;
 }
 
 makeTimeout();
