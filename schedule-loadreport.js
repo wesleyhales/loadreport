@@ -14,8 +14,8 @@ function runLoadreport(){
         });
     });
     exec('phantomjs loadreport.js http://www.people.com filmstrip', function (error, stdout, stderr) {
-        exec('mkdir filmstrip-' + increment, function(error, stdout, stderr){
-        	exec('mv screenshot*.png filmstrip-' + increment + '/', function(error, stdout, stderr){
+        exec('mkdir filmstrip/filmstrip-' + increment, function(error, stdout, stderr){
+        	exec('mv filmstrip/screenshot*.png filmstrip/filmstrip-' + increment + '/', function(error, stdout, stderr){
         		console.log('Filmstrip done.')
         	});
         });
