@@ -214,6 +214,10 @@ var loadreport = {
                 this.printToFile(config,report,'loadreport','json',phantom.args.indexOf('wipe') >= 0);
             }
 
+            if(phantom.args.indexOf('junit') >= 0){
+                this.printToFile(config,report,'loadreport','xml',phantom.args.indexOf('wipe') >= 0);
+            }
+
         }
 
 
@@ -468,6 +472,48 @@ var loadreport = {
         }
     },
 
+    /**
+     * Format test results as JUnit XML for CI
+     * @see: http://www.junit.org/
+     * @param {Array} tests the arrays containing the test results from testResults.
+     * @return {String} the results as JUnit XML text
+     */
+    formatAsJUnit: function (keys, values) {
+        var junitable = ['domReadystateLoading','domReadystateInteractive','windowOnload','elapsedLoadTime','numberOfResources','totalResourcesTime','totalResourcesSize','nonReportingResources'];
+        var i, n = 0, key, value, suite,
+            junit = [],
+            suites = [];
+
+        for (i = 0; i < keys.length; i++) {
+            key = keys[i];
+
+            if (junitable.indexOf(key) === -1) {
+                continue;
+            }
+            value = values[i];
+            // open test suite w/ summary
+            suite = '  <testsuite name="' + key + '" tests="1">\n';
+            suite += '    <testcase name="' + key + '" time="' + value + '"/>\n';
+            suite +='  </testsuite>';
+            suites.push(suite);
+            n++;
+        }
+
+        // xml
+        junit.push('<?xml version="1.0" encoding="UTF-8" ?>');
+
+        // open test suites wrapper
+        junit.push('<testsuites>');
+
+        // concat test cases
+        junit = junit.concat(suites);
+
+        // close test suites wrapper
+        junit.push('</testsuites>');
+
+        return junit.join('\n');
+    },
+
     printToFile: function(config,report,filename,extension,createNew) {
         var f, myfile,
             keys = [], values = [];
@@ -489,23 +535,28 @@ var loadreport = {
         if(!createNew && fs.exists(myfile)){
             //file exists so append line
             try{
-                if(extension === 'json'){
-                    var phantomLog = [];
-                    var tempLine = JSON.parse(fs.read(myfile));
-                    if(Object.prototype.toString.call( tempLine ) === '[object Array]'){
-                        phantomLog = tempLine;
-                    }
-                    phantomLog.push(report);
-                    fs.remove(myfile);
-                    f = fs.open(myfile, "w");
-                    f.writeLine(JSON.stringify(phantomLog));
-                    f.close();
-                }else{
-                    f = fs.open(myfile, "a");
-                    f.writeLine(values);
-                    f.close();
+                switch (extension) {
+                    case 'json':
+                        var phantomLog = [];
+                        var tempLine = JSON.parse(fs.read(myfile));
+                        if(Object.prototype.toString.call( tempLine ) === '[object Array]'){
+                            phantomLog = tempLine;
+                        }
+                        phantomLog.push(report);
+                        fs.remove(myfile);
+                        f = fs.open(myfile, "w");
+                        f.writeLine(JSON.stringify(phantomLog));
+                        f.close();
+                        break;
+                    case 'xml':
+                        console.log("cannot append report to xml file");
+                        break;
+                    default:
+                        f = fs.open(myfile, "a");
+                        f.writeLine(values);
+                        f.close();
+                        break;
                 }
-
             } catch (e) {
                 console.log("problem appending to file",e);
             }
@@ -516,11 +567,17 @@ var loadreport = {
             //write the headers and first line
             try {
                 f = fs.open(myfile, "w");
-                if(extension === 'json'){
-                    f.writeLine(JSON.stringify(report));
-                }else{
-                    f.writeLine(keys);
-                    f.writeLine(values);
+                switch (extension) {
+                    case 'json':
+                        f.writeLine(JSON.stringify(report));
+                        break;
+                    case 'xml':
+                        f.writeLine(this.formatAsJUnit(keys, values));
+                        break;
+                    default:
+                        f.writeLine(keys);
+                        f.writeLine(values);
+                        break;
                 }
                 f.close();
             } catch (e) {

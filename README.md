@@ -4,7 +4,7 @@
 You can take it for a spin in [this live demo](http://loadreport.wesleyhales.com/report.html).
 
 ## loadreport Examples
-### loadreport will write, to csv or json (filmstrip writes to png):
+### loadreport will write, to csv, json or junit format xml (filmstrip writes to png):
 * ``` phantomjs loadreport.js http://cnn.com performance csv ```
 ![loadreport](https://raw.github.com/wesleyhales/loadreport/master/readme/cnn-loadreport.png)
     
