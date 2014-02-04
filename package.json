@@ -1,6 +1,6 @@
 {
   "name": "loadreport",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "description": "Builds a report of DOM and resource load times using phantomjs",
   "keywords": "",
@@ -8,7 +8,7 @@
     "url": "https://github.com/wesleyhales/loadreport/issues",
     "email": "none@host.com"
   },
-  "main":"lib/main.js",
+  "main": "lib/main.js",
   "license": "",
   "repository": {
     "type": "git",
