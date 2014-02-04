@@ -18,5 +18,51 @@ You can take it for a spin in [this live demo](http://loadreport.wesleyhales.com
 ### speedreport produces a json and html file which will display detailed resource charting
 * ``` phantomjs speedreport.js http://www.cnn.com```
 ![speedreport](https://raw.github.com/wesleyhales/loadreport/master/readme/speedreport.png)
-    
+
+
+## Embedded web server
+### Quickly display speedreport HTML files
+
+Install npm packages
+
+* ``` npm install```
+
+Generate a report
+
+* ``` phantomjs speedreport.js http://www.cnn.com```
+
+Run the webserver
+
+* ``` ./node_modules/loadreport/lib/webserver.js [www_dir]```
+
+Run your favorite browser to **http://localhost:8080/**.
+
+
+
+## Development suppport
+### Setup
+
+Install npm packages
+
+* ``` npm install grunt-cli -g```
+* ``` npm install mocha -g```
+* ``` npm install```
+
+### Test
+
+See mocha
+
+* ``` npm test```
+
+### Document
+
+See grunt-gh-pages, docco
+
+* ``` grunt```
+
+### Release, Bump version
+
+See grunt-release
+
+* ``` grunt release:patch```
 
