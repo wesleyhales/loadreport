@@ -38,8 +38,19 @@ Run the webserver
 Run your favorite browser to **http://localhost:8080/**.
 
 
+## Documentation index
 
-## Development suppport
+http://maboiteaspam.github.io/loadreport/documentation/schedule-loadreport.html
+
+http://maboiteaspam.github.io/loadreport/documentation/speedreport.html
+
+http://maboiteaspam.github.io/loadreport/documentation/loadreport.html
+
+http://maboiteaspam.github.io/loadreport/documentation/main.html
+
+http://maboiteaspam.github.io/loadreport/documentation/webserver.html
+
+## Development support
 ### Setup
 
 Install npm packages
