@@ -540,7 +540,11 @@ var loadreport = {
                 switch (extension) {
                     case 'json':
                         var phantomLog = [];
-                        var tempLine = JSON.parse(fs.read(myfile));
+                        var tempLine = null;
+                        var json_content = fs.read(myfile);
+                        if( json_content != "" ){
+                          tempLine = JSON.parse(json_content);
+                        }
                         if(Object.prototype.toString.call( tempLine ) === '[object Array]'){
                             phantomLog = tempLine;
                         }
