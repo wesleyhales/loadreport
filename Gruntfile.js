@@ -32,7 +32,7 @@ module.exports = function(grunt) {
                 npmtag: true,
                 tagName: '<%= version %>',
                 github: {
-                    repo: 'maboiteaspam/phantomizer-grunt',
+                    repo: 'maboiteaspam/loadreport',
                     usernameVar: 'GITHUB_USERNAME',
                     passwordVar: 'GITHUB_PASSWORD'
                 }
