@@ -1,1 +1,7 @@
 phantomjs
+node_modules
+.grunt
+documentation
+filmstrip
+reports
+speedreports

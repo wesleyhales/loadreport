@@ -1,0 +1,39 @@
+{
+  "name": "loadreport",
+  "version": "0.0.2",
+  "private": true,
+  "description": "Builds a report of DOM and resource load times using phantomjs",
+  "keywords": "",
+  "bugs": {
+    "url": "https://github.com/wesleyhales/loadreport/issues",
+    "email": "none@host.com"
+  },
+  "main": "lib/main.js",
+  "license": "",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/wesleyhales/loadreport.git"
+  },
+  "scripts": {
+    "test": "make test_all"
+  },
+  "bin": {
+    "loadreport": "lib/webserver.js"
+  },
+  "dependencies": {
+    "express": "~3.4.8",
+    "optimist": "0.4.x",
+    "phantomjs": "1.9.x"
+  },
+  "devDependencies": {
+    "docco": "jashkenas/docco",
+    "grunt-docco": "DavidSouther/grunt-docco",
+    "grunt-gh-pages": "~0.9.0",
+    "wrench": "~1.5.6",
+    "grunt-release": "geddski/grunt-release",
+    "should": "~3.1.2",
+    "mocha": "~1.17.1",
+    "request": "~2.33.0",
+    "npmlog": "0.0.6"
+  }
+}

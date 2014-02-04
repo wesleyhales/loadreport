@@ -57,9 +57,9 @@ var loadreport = {
                 var _timer1=setInterval(function(){
                     if(/interactive/.test(document.readyState)){
                         console.log('interactive-' + (new Date().getTime() - startTime));
-                        clearInterval(_timer1); 
+                        clearInterval(_timer1);
                         //clear loading interval
-                        clearInterval(_timer3); 
+                        clearInterval(_timer3);
                     }
                 }, 5);
 
@@ -71,8 +71,8 @@ var loadreport = {
                 //     }
                 // }, 5);
 
-                //The DOMContentLoaded event is fired when the document has been completely 
-                //loaded and parsed, without waiting for stylesheets, images, and subframes 
+                //The DOMContentLoaded event is fired when the document has been completely
+                //loaded and parsed, without waiting for stylesheets, images, and subframes
                 //to finish loading
                 document.addEventListener("DOMContentLoaded", function() {
                     console.log('DOMContentLoaded-' + (new Date().getTime() - startTime));
@@ -82,7 +82,7 @@ var loadreport = {
                 window.addEventListener("load", function() {
                     console.log('onload-' + (new Date().getTime() - startTime));
                 }, false);
-                
+
                 //check for JS errors
                 window.onerror = function(message, url, linenumber) {
                     console.log("jserror-JavaScript error: " + message + " on line " + linenumber + " for " + url);
@@ -189,7 +189,7 @@ var loadreport = {
             report.domReadystateInteractive = isNaN(drsi) == false ? drsi : 0;
             // report.domReadystateComplete = isNaN(drsc) == false ? drsc : 0;
             report.windowOnload = isNaN(wo) == false ? wo : 0;
-            
+
             report.elapsedLoadTime = elapsed;
             report.numberOfResources = resources.length-1;
             report.totalResourcesTime = totalDuration;
@@ -529,8 +529,10 @@ var loadreport = {
             myfile = 'reports/' + filename + '-' + phantom.args[3] + '.' + extension;
         }else{
             myfile = 'reports/' + filename + '.' + extension;
-
         }
+        // Given localhost:8880/some
+        // Transforms to localhost_8880/some
+        myfile = myfile.replace(":","_");
 
         if(!createNew && fs.exists(myfile)){
             //file exists so append line
@@ -538,7 +540,11 @@ var loadreport = {
                 switch (extension) {
                     case 'json':
                         var phantomLog = [];
-                        var tempLine = JSON.parse(fs.read(myfile));
+                        var tempLine = null;
+                        var json_content = fs.read(myfile);
+                        if( json_content != "" ){
+                          tempLine = JSON.parse(json_content);
+                        }
                         if(Object.prototype.toString.call( tempLine ) === '[object Array]'){
                             phantomLog = tempLine;
                         }
