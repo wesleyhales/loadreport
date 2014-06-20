@@ -6,6 +6,7 @@ var exec = require('child_process').exec;
 
 var increment = 0;
 
+// TODO: Pass URL as argument when calling as "node schedule-loadreport.js <URL>".
 function runLoadreport(){
     exec('phantomjs loadreport.js http://www.people.com performance csv', function (error, stdout, stderr) {
         exec('mv reports/loadreport.csv reports/loadreport-' + increment + '.csv', function(error, stdout, stderr){
