@@ -1,3 +1,7 @@
+// Schedule all three types of reports to run every hour.
+// Files are saved in relative paths "reports/" and "filmstrip-<increment>/".
+// File names for CSV and JSON are incremented each hour from zero as "loadreport-<increment>.<csv OR json>".
+// Folder for filmstrip images is incremented from zero as "filmstrip-<increment>/".
 var exec = require('child_process').exec;
 
 var increment = 0;
