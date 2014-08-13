@@ -1,5 +1,5 @@
 # loadreport.js
-[PhantomJS](http://www.phantomjs.org/) 1.6+ is required to run loadreport.js or speedreport.js.
+[PhantomJS](http://www.phantomjs.org/) 2.0 is required to run loadreport.js or speedreport.js.
 
 You can take it for a spin in [this live demo](http://loadreport.wesleyhales.com/report.html).
 

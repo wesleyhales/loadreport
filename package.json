@@ -1,6 +1,6 @@
 {
   "name": "loadreport",
-  "version": "0.0.2",
+  "version": "2.0.0",
   "private": true,
   "description": "Builds a report of DOM and resource load times using phantomjs",
   "keywords": "",
