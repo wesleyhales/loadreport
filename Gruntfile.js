@@ -5,11 +5,11 @@ module.exports = function(grunt) {
     docco: {
       debug: {
         src: [
-          'schedule-loadreport.js',
-          'speedreport.js',
-          'loadreport.js',
-          'lib/main.js',
-          'lib/webserver.js'
+          'utils/schedule-loadreport.js',
+          'core/speedreport.js',
+          'core/loadreport.js',
+          'utils/lib/main.js',
+          'utils/lib/webserver.js'
         ],
         options: {
           layout:'linear',
