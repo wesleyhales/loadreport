@@ -1,5 +1,5 @@
 # loadreport.js
-[PhantomJS](http://www.phantomjs.org/) 2.0 is required and must be installed before running loadreport
+[PhantomJS](http://www.phantomjs.org/) 2.0 is required and must be installed before running loadreport. [Instructions here] (https://github.com/ariya/phantomjs/wiki/PhantomJS-2)
 
 ## Install
 ### npm install -g
