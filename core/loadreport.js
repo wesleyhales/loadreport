@@ -1,5 +1,7 @@
-var fs = require('fs');
-var WebPage = require('webpage');
+#!/usr/bin/env phantomjs
+
+var fs = require('fs'),
+    WebPage = require('webpage');
 
 var loadreport = {
 
@@ -383,17 +385,30 @@ var loadreport = {
     },
 
     mergeConfig: function (config, configFile) {
-        if (!fs.exists(configFile)) {
-            configFile = "loadreport/config.json";
-        }
-        if (!fs.exists(configFile)) {
+        var result = '',key;
+        if (fs.exists(configFile)) {
             configFile = "config.json";
+            result = JSON.parse(fs.read(configFile));
+        }else{
+            //need to hard code default config file if installed as global module... better way? we don't need a lot of this.
+            result = {
+                "task": "performance",
+                "userAgent": "chrome",
+                "userAgentAliases": {
+                    "iphone": "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7",
+                    "android": "Mozilla/5.0 (Linux; U; Android 2.2; en-us; Nexus One Build/FRF91) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1",
+                    "chrome": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.12 Safari/535.11"
+                },
+                "wait": 0,
+                "cacheWait" : 200,
+                "consolePrefix": "#",
+                "verbose": false
+            }
         }
-        var result = JSON.parse(fs.read(configFile)),
-            key;
-        for (key in config) {
-            result[key] = config[key];
-        }
+            for (key in config) {
+                result[key] = config[key];
+            }
+
         return result;
     },
 
