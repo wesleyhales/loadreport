@@ -20,7 +20,7 @@ var loadreport = {
         def: 'performance_old',
         req: false,
         desc: 'the task to perform',
-        oneof: ['navigation','performance_old', 'performancecache', 'filmstrip']
+        oneof: ['performance', 'navigation','performance_old', 'performancecache', 'filmstrip']
       },
       {
         name: 'configFile',
@@ -38,9 +38,54 @@ var loadreport = {
 
 
   performance: {
+    onInitialized: function() {
+      console.log(performance.now());
 
+      var timing = performance.timing;
 
+      console.log('connectStart',timing.connectStart);
 
+      console.log('navigationStart',timing.navigationStart);
+
+      console.log('secureConnectionStart',timing.secureConnectionStart);
+
+      console.log('fetchStart',timing.fetchStart);
+
+      console.log('domContentLoadedEventStart',timing.domContentLoadedEventStart);
+
+      console.log('responseStart',timing.responseStart);
+
+      console.log('domInteractive',timing.domInteractive);
+
+      console.log('domainLookupEnd',timing.domainLookupEnd);
+
+      console.log('redirectStart',timing.redirectStart);
+
+      console.log('requestStart',timing.requestStart);
+
+      console.log('unloadEventEnd',timing.unloadEventEnd);
+
+      console.log('unloadEventStart',timing.unloadEventStart);
+
+      console.log('domComplete',timing.domComplete);
+
+      console.log('domainLookupStart',timing.domainLookupStart);
+
+      console.log('loadEventStart',timing.loadEventStart);
+
+      console.log('domContentLoadedEventEnd',timing.domContentLoadedEventEnd);
+
+      console.log('redirectEnd', timing.redirectEnd);
+
+      console.log('connectEnd',timing.connectEnd);
+
+      console.log('responseEnd', timing.responseEnd);
+
+      console.log('domLoading',timing.domLoading);
+
+      console.log('loadEventEnd',timing.loadEventEnd);
+
+    }
   },
 
   navigation: {
