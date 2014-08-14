@@ -20,7 +20,7 @@ var loadreport = {
         def: 'performance_old',
         req: false,
         desc: 'the task to perform',
-        oneof: ['performance_old', 'performancecache', 'filmstrip']
+        oneof: ['navigation','performance_old', 'performancecache', 'filmstrip']
       },
       {
         name: 'configFile',
@@ -42,6 +42,32 @@ var loadreport = {
 
 
   },
+
+  navigation: {
+    onInitialized: function(){
+      var nav = performance.navigation;
+
+      console.log('Navigation Timing Description');
+
+        switch(nav.type){
+          case 0:
+            console.log('Type_NavigateNext: Navigation started by clicking on a link, or entering the URL in the user agent\'s address bar, or form submission, or initializing through a script operation');
+            break;
+          case 1:
+            console.log('Type_Reload: Navigation through the reload operation or the location.reload() method.');
+            break;
+          case 2:
+            console.log('Type_Back_Forward: Navigation through a history traversal operation.');
+            break;
+          case 255:
+            console.log('Type_Undefined: Any navigation types not defined by values above.');
+            break;
+          default:
+            console.log('Not detected');
+        }
+      }
+  },
+
 
 
   performance_old: {
