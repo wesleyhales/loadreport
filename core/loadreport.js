@@ -49,11 +49,22 @@ var loadreport = {
 
       console.log(performance.now(),now);
 
+      //high level load times
       report.pageLoadTime = {label: 'Total time to load page',value: timing.loadEventEnd - timing.navigationStart};
 
       report.perceivedLoadTime = {label: 'User-perceived page load time', value: 0};
 
+      //time spent making request to server and receiving the response - after network lookups and nego
       report.requestResponse = {label: 'Calculate time from request start to response end',value: timing.responseEnd - timing.requestStart};
+
+      //network level redirects
+      report.redirectTime = {label:'Time spent during redirect',value: timing.redirectEnd - timing.redirectStart};
+
+      //time spent in app cache, domain lookups, and making secure connection
+      report.fetchTime = {label:'Fetch start to response end', value: timing.connectEnd - timing.fetchStart};
+
+      //time spent processing page
+      report.pageProcessTime = {label: 'Total time spent processing page',value: timing.loadEventStart - timing.domLoading};
 
       for(var key in report){
 
@@ -111,13 +122,21 @@ var loadreport = {
           timing =  performance.timing,
           report  = {};
 
-      console.log(performance.now(),now);
+      console.log('--------',performance.now(),now);
 
-      report.pageLoadTime = {label: '2Total time to load page',value: timing.loadEventEnd - timing.navigationStart};
+      //high level load times
+      report.pageLoadTime = {label: 'Total time to load page',value: timing.loadEventEnd - timing.navigationStart};
 
-      report.perceivedLoadTime = {label: '2User-perceived page load time', value: 0};
+      report.perceivedLoadTime = {label: 'User-perceived page load time', value: 0};
 
-      report.requestResponse = {label: '2Calculate time from request start to response end',value: timing.responseEnd - timing.requestStart};
+      //time spent making request to server and receiving the response - after network lookups and nego
+      report.requestResponse = {label: 'Calculate time from request start to response end',value: timing.responseEnd - timing.requestStart};
+
+      //network level redirects
+      report.redirectTime = {label:'Time spent during redirect',value: timing.redirectEnd - timing.redirectStart};
+
+      //time spent in app cache and domain lookups, and making secure connection
+      report.fetchTime = {label:'Fetch start to response end', value: timing.connectEnd - timing.fetchStart};
 
       for(var key in report){
 
