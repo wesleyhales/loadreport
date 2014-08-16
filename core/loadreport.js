@@ -39,9 +39,28 @@ var loadreport = {
 
   performance: {
     onInitialized: function() {
-      console.log(performance.now());
 
-      var timing = performance.timing;
+      //returnd HRT - High Resolution Time gives us floating point time stamps that can be accurate to microsecond resolution.
+      //The now() method returns the time elapsed from when the navigationStart time in PerformanceTiming happened.
+
+      var now = new Date().getTime(),
+          timing =  performance.timing,
+          report  = {};
+
+      console.log(performance.now(),now);
+
+      report.pageLoadTime = {label: 'Total time to load page',value: timing.loadEventEnd - timing.navigationStart};
+
+      report.perceivedLoadTime = {label: 'User-perceived page load time', value: 0};
+
+      report.requestResponse = {label: 'Calculate time from request start to response end',value: timing.responseEnd - timing.requestStart};
+
+      for(var key in report){
+
+        console.log('----',report[key].label,report[key].value)
+
+      }
+
 
       console.log('connectStart',timing.connectStart);
 
@@ -84,6 +103,28 @@ var loadreport = {
       console.log('domLoading',timing.domLoading);
 
       console.log('loadEventEnd',timing.loadEventEnd);
+
+    },
+    onLoadFinished: function (page, config, status) {
+
+      var now = new Date().getTime(),
+          timing =  performance.timing,
+          report  = {};
+
+      console.log(performance.now(),now);
+
+      report.pageLoadTime = {label: '2Total time to load page',value: timing.loadEventEnd - timing.navigationStart};
+
+      report.perceivedLoadTime = {label: '2User-perceived page load time', value: 0};
+
+      report.requestResponse = {label: '2Calculate time from request start to response end',value: timing.responseEnd - timing.requestStart};
+
+      for(var key in report){
+
+        console.log('----',report[key].label,report[key].value)
+
+      }
+
 
     }
   },
