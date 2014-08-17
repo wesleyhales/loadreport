@@ -37,40 +37,84 @@ var loadreport = {
   },
 
 
+
+
+
   performance: {
-    onInitialized: function() {
 
-      //returnd HRT - High Resolution Time gives us floating point time stamps that can be accurate to microsecond resolution.
-      //The now() method returns the time elapsed from when the navigationStart time in PerformanceTiming happened.
+    perfObj:{
 
-      var now = new Date().getTime(),
-          timing =  performance.timing,
-          report  = {};
+      data : function(){
 
-      console.log(performance.now(),now);
+        var report  = {};
 
-      //high level load times
-      report.pageLoadTime = {label: 'Total time to load page',value: timing.loadEventEnd - timing.navigationStart};
+        //returnd HRT - High Resolution Time gives us floating point time stamps that can be accurate to microsecond resolution.
+        //The now() method returns the time elapsed from when the navigationStart time in PerformanceTiming happened.
 
-      report.perceivedLoadTime = {label: 'User-perceived page load time', value: 0};
+        //high level load times
+        report.pageLoadTime = {label: 'Total time to load page',value: 0};
 
-      //time spent making request to server and receiving the response - after network lookups and nego
-      report.requestResponse = {label: 'Calculate time from request start to response end',value: timing.responseEnd - timing.requestStart};
+        report.perceivedLoadTime = {label: 'User-perceived page load time', value: 0};
 
-      //network level redirects
-      report.redirectTime = {label:'Time spent during redirect',value: timing.redirectEnd - timing.redirectStart};
+        //time spent making request to server and receiving the response - after network lookups and nego
+        report.requestResponse = {label: 'Calculate time from request start to response end',value: 0};
 
-      //time spent in app cache, domain lookups, and making secure connection
-      report.fetchTime = {label:'Fetch start to response end', value: timing.connectEnd - timing.fetchStart};
+        //network level redirects
+        report.redirectTime = {label:'Time spent during redirect',value: 0};
 
-      //time spent processing page
-      report.pageProcessTime = {label: 'Total time spent processing page',value: timing.loadEventStart - timing.domLoading};
+        //time spent in app cache, domain lookups, and making secure connection
+        report.fetchTime = {label:'Fetch start to response end', value: 0};
 
-      for(var key in report){
+        //time spent processing page
+        report.pageProcessTime = {label: 'Total time spent processing page',value: 0};
 
-        console.log('----',report[key].label,report[key].value)
+        return JSON.stringify(report);
+
 
       }
+
+    },
+
+    onInitialized: function (page, config) {
+
+      var pageeval = page.evaluate(function (perfObj) {
+
+        var report = JSON.parse(perfObj),
+            now = new Date().getTime(),
+            timing =  performance.timing;
+
+        console.log(performance.now(),now);
+
+        report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
+        report.perceivedLoadTime.value = 0; //TODO - calculate if needed
+        report.requestResponse.value = timing.responseEnd - timing.requestStart;
+        report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
+        report.fetchTime.value = timing.connectEnd - timing.fetchStart;
+        report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
+
+        for(var key in report){
+
+          console.log('----',report[key].label,report[key].value)
+
+        }
+
+      }, this.performance.perfObj.data());
+
+    },
+    onLoadStarted: function (page, config) {
+        console.log('###################',this.performance.start)
+//      if (!this.performance_old.start) {
+//        this.performance_old.start = new Date().getTime();
+//      }
+    },
+
+    onLoadFinished: function() {
+
+
+
+
+
+
 
 
       console.log('connectStart',timing.connectStart);
@@ -114,36 +158,6 @@ var loadreport = {
       console.log('domLoading',timing.domLoading);
 
       console.log('loadEventEnd',timing.loadEventEnd);
-
-    },
-    onLoadFinished: function (page, config, status) {
-
-      var now = new Date().getTime(),
-          timing =  performance.timing,
-          report  = {};
-
-      console.log('--------',performance.now(),now);
-
-      //high level load times
-      report.pageLoadTime = {label: 'Total time to load page',value: timing.loadEventEnd - timing.navigationStart};
-
-      report.perceivedLoadTime = {label: 'User-perceived page load time', value: 0};
-
-      //time spent making request to server and receiving the response - after network lookups and nego
-      report.requestResponse = {label: 'Calculate time from request start to response end',value: timing.responseEnd - timing.requestStart};
-
-      //network level redirects
-      report.redirectTime = {label:'Time spent during redirect',value: timing.redirectEnd - timing.redirectStart};
-
-      //time spent in app cache and domain lookups, and making secure connection
-      report.fetchTime = {label:'Fetch start to response end', value: timing.connectEnd - timing.fetchStart};
-
-      for(var key in report){
-
-        console.log('----',report[key].label,report[key].value)
-
-      }
-
 
     }
   },
@@ -420,7 +434,7 @@ var loadreport = {
       }
       page.settings.userAgent = config.userAgent;
     }
-    ['onInitialized', 'onLoadStarted', 'onResourceRequested', 'onResourceReceived']
+    ['onInitialized', 'onLoadStarted', 'onLoadFinished','onResourceRequested', 'onResourceReceived']
         .forEach(function (event) {
           if (task[event]) {
             page[event] = function () {
@@ -459,7 +473,7 @@ var loadreport = {
     page.settings.localToRemoteUrlAccessEnabled = true;
     page.settings.webSecurityEnabled = false;
     page.onConsoleMessage = function (msg) {
-      console.log(msg)
+      console.log('eval\'d',msg)
       if (msg.indexOf('jserror-') >= 0) {
         loadreport.performance_old.evalConsoleErrors.push(msg.substring('jserror-'.length, msg.length));
       } else {
