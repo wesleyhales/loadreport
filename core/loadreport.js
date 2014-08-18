@@ -7,7 +7,7 @@ var loadreport = {
 
   run: function () {
     var cliConfig = {};
-    loadreport.performancecache = this.clone(loadreport.performance_old);
+    loadreport.performancecache = this.clone(loadreport.performance);
     if (!this.processArgs(cliConfig, [
       {
         name: 'url',
@@ -17,7 +17,7 @@ var loadreport = {
       },
       {
         name: 'task',
-        def: 'performance_old',
+        def: 'performance',
         req: false,
         desc: 'the task to perform',
         oneof: ['performance', 'navigation','performance_old', 'performancecache', 'filmstrip']
@@ -35,10 +35,6 @@ var loadreport = {
     var task = this[this.config.task];
     this.load(this.config, task, this);
   },
-
-
-
-
 
   performance: {
 
@@ -75,9 +71,7 @@ var loadreport = {
 
     },
 
-
-
-      onInitialized : function(page,config){
+      onLoadFinished : function(page,config){
         console.log('runPerf');
         var pageeval = page.evaluate(function (perfObj) {
 
@@ -85,7 +79,6 @@ var loadreport = {
               now = new Date().getTime(),
               timing = performance.timing;
 
-          setTimeout(function() {
             console.log(performance.now(), now);
 
             report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
@@ -102,190 +95,64 @@ var loadreport = {
 
             }
 
-          },1000);
+      console.log('navigationStart',timing.navigationStart);
+
+      console.log('secureConnectionStart',timing.secureConnectionStart);
+
+      console.log('fetchStart',timing.fetchStart);
+
+      console.log('domContentLoadedEventStart',timing.domContentLoadedEventStart);
+
+      console.log('responseStart',timing.responseStart);
+
+      console.log('domInteractive',timing.domInteractive);
+
+      console.log('domainLookupEnd',timing.domainLookupEnd);
+
+      console.log('redirectStart',timing.redirectStart);
+
+      console.log('requestStart',timing.requestStart);
+
+      console.log('unloadEventEnd',timing.unloadEventEnd);
+
+      console.log('unloadEventStart',timing.unloadEventStart);
+
+      console.log('domComplete',timing.domComplete);
+
+      console.log('domainLookupStart',timing.domainLookupStart);
+
+      console.log('loadEventStart',timing.loadEventStart);
+
+      console.log('domContentLoadedEventEnd',timing.domContentLoadedEventEnd);
+
+      console.log('redirectEnd', timing.redirectEnd);
+
+      console.log('connectEnd',timing.connectEnd);
+
+      console.log('responseEnd', timing.responseEnd);
+
+      console.log('domLoading',timing.domLoading);
+
+      console.log('loadEventEnd',timing.loadEventEnd);
 
         }, this.performance.perfObj.data());
 
     },
 
-//    onLoadStarted : function(page,config){
-//      console.log('runPerf');
-//      var pageeval = page.evaluate(function (perfObj) {
-//
-//        var report = JSON.parse(perfObj),
-//            now = new Date().getTime(),
-//            timing = performance.timing;
-//        console.log('----report', report.pageLoadTime.value, timing);
-//
-//        setTimeout(function(){
-//        console.log(performance.now(), now);
-//
-//        report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
-//        report.perceivedLoadTime.value = 0; //TODO - calculate if needed
-//        report.requestResponse.value = timing.responseEnd - timing.requestStart;
-//        report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
-//        report.fetchTime.value = timing.connectEnd - timing.fetchStart;
-//        report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
-//
-//
-//        for (var key in report) {
-//
-//          console.log('----', report[key].label, report[key].value)
-//
-//        }
-//
-//        },100);
-//
-//      }, this.performance.perfObj.data());
-//
-//    },
-//
-//    onLoadFinished : function(page,config){
-//      console.log('runPerf');
-//      var pageeval = page.evaluate(function (perfObj) {
-//
-//        var report = JSON.parse(perfObj),
-//            now = new Date().getTime(),
-//            timing = performance.timing;
-//        console.log('----report', report.pageLoadTime.value, timing);
-//
-//        setTimeout(function(){
-//        console.log(performance.now(), now);
-//
-//        report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
-//        report.perceivedLoadTime.value = 0; //TODO - calculate if needed
-//        report.requestResponse.value = timing.responseEnd - timing.requestStart;
-//        report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
-//        report.fetchTime.value = timing.connectEnd - timing.fetchStart;
-//        report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
-//
-//
-//        for (var key in report) {
-//
-//          console.log('----', report[key].label, report[key].value)
-//
-//        }
-//
-//        },100);
-//
-//      }, this.performance.perfObj.data());
-//
-//    },
-//
-//    onNavigationRequested : function(page,config){
-//      console.log('runPerf');
-//      var pageeval = page.evaluate(function (perfObj) {
-//
-//        var report = JSON.parse(perfObj),
-//            now = new Date().getTime(),
-//            timing = performance.timing;
-//        console.log('----report', report.pageLoadTime.value, timing);
-//
-//        setTimeout(function(){
-//        console.log(performance.now(), now);
-//
-//        report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
-//        report.perceivedLoadTime.value = 0; //TODO - calculate if needed
-//        report.requestResponse.value = timing.responseEnd - timing.requestStart;
-//        report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
-//        report.fetchTime.value = timing.connectEnd - timing.fetchStart;
-//        report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
-//
-//
-//        for (var key in report) {
-//
-//          console.log('----', report[key].label, report[key].value)
-//
-//        }
-//
-//        },100);
-//
-//      }, this.performance.perfObj.data());
-//
-//    },
-//
-//    onPageCreated : function(page,config){
-//      console.log('runPerf');
-//      var pageeval = page.evaluate(function (perfObj) {
-//
-//        var report = JSON.parse(perfObj),
-//            now = new Date().getTime(),
-//            timing = performance.timing;
-//        console.log('----report', report.pageLoadTime.value, timing);
-//
-//        setTimeout(function(){
-//        console.log(performance.now(), now);
-//
-//        report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
-//        report.perceivedLoadTime.value = 0; //TODO - calculate if needed
-//        report.requestResponse.value = timing.responseEnd - timing.requestStart;
-//        report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
-//        report.fetchTime.value = timing.connectEnd - timing.fetchStart;
-//        report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
-//
-//
-//        for (var key in report) {
-//
-//          console.log('----', report[key].label, report[key].value)
-//
-//        }
-//
-//        },100);
-//
-//      }, this.performance.perfObj.data());
-//
-//    },
-
-    temp: function (page, config) {
-
-      this.performance.runPerf();
-
+    onLoadStarted : function(page,config){
+      console.log('###### onLoadStarted');
     },
 
-    onLoadFinished: function() {
-//      var timing =  performance.timing;
-     t;
+    onNavigationRequested : function(page,config){
+      console.log('###### onNavigationRequested');
+    },
 
-//      console.log('navigationStart',timing.navigationStart);
-//
-//      console.log('secureConnectionStart',timing.secureConnectionStart);
-//
-//      console.log('fetchStart',timing.fetchStart);
-//
-//      console.log('domContentLoadedEventStart',timing.domContentLoadedEventStart);
-//
-//      console.log('responseStart',timing.responseStart);
-//
-//      console.log('domInteractive',timing.domInteractive);
-//
-//      console.log('domainLookupEnd',timing.domainLookupEnd);
-//
-//      console.log('redirectStart',timing.redirectStart);
-//
-//      console.log('requestStart',timing.requestStart);
-//
-//      console.log('unloadEventEnd',timing.unloadEventEnd);
-//
-//      console.log('unloadEventStart',timing.unloadEventStart);
-//
-//      console.log('domComplete',timing.domComplete);
-//
-//      console.log('domainLookupStart',timing.domainLookupStart);
-//
-//      console.log('loadEventStart',timing.loadEventStart);
-//
-//      console.log('domContentLoadedEventEnd',timing.domContentLoadedEventEnd);
-//
-//      console.log('redirectEnd', timing.redirectEnd);
-//
-//      console.log('connectEnd',timing.connectEnd);
-//
-//      console.log('responseEnd', timing.responseEnd);
-//
-//      console.log('domLoading',timing.domLoading);
-//
-//      console.log('loadEventEnd',timing.loadEventEnd);
+    onPageCreated : function(page,config){
+      console.log('###### onPageCreated');
+    },
 
+    onInitialized: function() {
+      console.log('###### onInitialized');
     }
   },
 
@@ -575,28 +442,36 @@ var loadreport = {
 
           }
         });
+
     if (task.onLoadFinished) {
       page.onLoadFinished = function (status) {
-        if (config.wait) {
-          setTimeout(
-              function () {
-                task.onLoadFinished.call(scope, page, config, status);
-              },
-              config.wait
-          );
-        } else {
-          task.onLoadFinished.call(scope, page, config, status);
-        }
+        task.onLoadFinished.call(scope, page, config, status);
         phantom.exit();
-
-        page = WebPage.create();
-        doPageLoad();
       };
     } else {
       page.onLoadFinished = function (status) {
         phantom.exit();
       };
     }
+
+    function doPageLoad(x) {
+      setTimeout(function () {
+          console.log('load page',x)
+          page.open(config.url);
+      }, config.cacheWait);
+    }
+
+    if (config.task == 'performancecache') {
+      pagetemp.open(config.url, function (status) {
+          if (status === 'success') {
+              pagetemp.release();
+              doPageLoad(2);
+          }
+      });
+    } else {
+      doPageLoad(3);
+    }
+
     page.settings.localToRemoteUrlAccessEnabled = true;
     page.settings.webSecurityEnabled = false;
     page.onConsoleMessage = function (msg) {
@@ -624,23 +499,6 @@ var loadreport = {
       })
     };
 
-    function doPageLoad() {
-      setTimeout(function () {
-        page.open(config.url);
-      }, config.cacheWait);
-    }
-
-    if (config.task == 'performancecache') {
-
-      pagetemp.open(config.url, function (status) {
-        if (status === 'success') {
-          pagetemp.release();
-          doPageLoad();
-        }
-      });
-    } else {
-      doPageLoad();
-    }
   },
 
   processArgs: function (config, contract) {
@@ -675,7 +533,7 @@ var loadreport = {
     } else {
       //need to hard code default config file if installed as global module... better way? we don't need a lot of this.
       result = {
-        "task": "performance_old",
+        "task": "performance",
         "userAgent": "chrome",
         "userAgentAliases": {
           "iphone": "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_0 like Mac OS X; en-us) AppleWebKit/532.9 (KHTML, like Gecko) Version/4.0.5 Mobile/8A293 Safari/6531.22.7",

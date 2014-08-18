@@ -10,7 +10,7 @@ page.onConsoleMessage = function (msg) {
 
 page.onInitialized = function () {
 //  page.evaluate(function () {
-  loadreport(performance)
+  //loadreport(performance)
 
 };
 
@@ -20,7 +20,7 @@ page.open(address, function (status) {
 
     console.log('Network status:', status, address);
 
-    console.log(page.evaluate(function () {
+    page.evaluate(function () {
       console.log('############################ evaluate')
       var now = new Date().getTime(),
           timing = performance.timing,
@@ -52,48 +52,8 @@ page.open(address, function (status) {
       }
 
 
-      console.log('connectStart', timing.connectStart);
 
-      console.log('navigationStart', timing.navigationStart);
-
-      console.log('secureConnectionStart', timing.secureConnectionStart);
-
-      console.log('fetchStart', timing.fetchStart);
-
-      console.log('domContentLoadedEventStart', timing.domContentLoadedEventStart);
-
-      console.log('responseStart', timing.responseStart);
-
-      console.log('domInteractive', timing.domInteractive);
-
-      console.log('domainLookupEnd', timing.domainLookupEnd);
-
-      console.log('redirectStart', timing.redirectStart);
-
-      console.log('requestStart', timing.requestStart);
-
-      console.log('unloadEventEnd', timing.unloadEventEnd);
-
-      console.log('unloadEventStart', timing.unloadEventStart);
-
-      console.log('domComplete', timing.domComplete);
-
-      console.log('domainLookupStart', timing.domainLookupStart);
-
-      console.log('loadEventStart', timing.loadEventStart);
-
-      console.log('domContentLoadedEventEnd', timing.domContentLoadedEventEnd);
-
-      console.log('redirectEnd', timing.redirectEnd);
-
-      console.log('connectEnd', timing.connectEnd);
-
-      console.log('responseEnd', timing.responseEnd);
-
-      console.log('domLoading', timing.domLoading);
-
-      console.log('loadEventEnd', timing.loadEventEnd);
-    }));
+    });
 
 
 });
@@ -128,50 +88,5 @@ function loadreport(performance){
     console.log('----', report[key].label, report[key].value)
 
   }
-
-
-  console.log('connectStart', timing.connectStart);
-
-  console.log('navigationStart', timing.navigationStart);
-
-  console.log('secureConnectionStart', timing.secureConnectionStart);
-
-  console.log('fetchStart', timing.fetchStart);
-
-  console.log('domContentLoadedEventStart', timing.domContentLoadedEventStart);
-
-  console.log('responseStart', timing.responseStart);
-
-  console.log('domInteractive', timing.domInteractive);
-
-  console.log('domainLookupEnd', timing.domainLookupEnd);
-
-  console.log('redirectStart', timing.redirectStart);
-
-  console.log('requestStart', timing.requestStart);
-
-  console.log('unloadEventEnd', timing.unloadEventEnd);
-
-  console.log('unloadEventStart', timing.unloadEventStart);
-
-  console.log('domComplete', timing.domComplete);
-
-  console.log('domainLookupStart', timing.domainLookupStart);
-
-  console.log('loadEventStart', timing.loadEventStart);
-
-  console.log('domContentLoadedEventEnd', timing.domContentLoadedEventEnd);
-
-  console.log('redirectEnd', timing.redirectEnd);
-
-  console.log('connectEnd', timing.connectEnd);
-
-  console.log('responseEnd', timing.responseEnd);
-
-  console.log('domLoading', timing.domLoading);
-
-  console.log('loadEventEnd', timing.loadEventEnd);
-
-
 
 }
