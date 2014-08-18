@@ -75,95 +75,222 @@ var loadreport = {
 
     },
 
-    onInitialized: function (page, config) {
 
-      var pageeval = page.evaluate(function (perfObj) {
 
-        var report = JSON.parse(perfObj),
-            now = new Date().getTime(),
-            timing =  performance.timing;
+      onInitialized : function(page,config){
+        console.log('runPerf');
+        var pageeval = page.evaluate(function (perfObj) {
 
-        console.log(performance.now(),now);
+          var report = JSON.parse(perfObj),
+              now = new Date().getTime(),
+              timing = performance.timing;
 
-        report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
-        report.perceivedLoadTime.value = 0; //TODO - calculate if needed
-        report.requestResponse.value = timing.responseEnd - timing.requestStart;
-        report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
-        report.fetchTime.value = timing.connectEnd - timing.fetchStart;
-        report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
+          setTimeout(function() {
+            console.log(performance.now(), now);
 
-        for(var key in report){
+            report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
+            report.perceivedLoadTime.value = 0; //TODO - calculate if needed
+            report.requestResponse.value = timing.responseEnd - timing.requestStart;
+            report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
+            report.fetchTime.value = timing.connectEnd - timing.fetchStart;
+            report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
 
-          console.log('----',report[key].label,report[key].value)
 
-        }
+            for (var key in report) {
 
-      }, this.performance.perfObj.data());
+              console.log('----', report[key].label, report[key].value)
+
+            }
+
+          },1000);
+
+        }, this.performance.perfObj.data());
 
     },
-    onLoadStarted: function (page, config) {
-        console.log('###################',this.performance.start)
-//      if (!this.performance_old.start) {
-//        this.performance_old.start = new Date().getTime();
-//      }
+
+//    onLoadStarted : function(page,config){
+//      console.log('runPerf');
+//      var pageeval = page.evaluate(function (perfObj) {
+//
+//        var report = JSON.parse(perfObj),
+//            now = new Date().getTime(),
+//            timing = performance.timing;
+//        console.log('----report', report.pageLoadTime.value, timing);
+//
+//        setTimeout(function(){
+//        console.log(performance.now(), now);
+//
+//        report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
+//        report.perceivedLoadTime.value = 0; //TODO - calculate if needed
+//        report.requestResponse.value = timing.responseEnd - timing.requestStart;
+//        report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
+//        report.fetchTime.value = timing.connectEnd - timing.fetchStart;
+//        report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
+//
+//
+//        for (var key in report) {
+//
+//          console.log('----', report[key].label, report[key].value)
+//
+//        }
+//
+//        },100);
+//
+//      }, this.performance.perfObj.data());
+//
+//    },
+//
+//    onLoadFinished : function(page,config){
+//      console.log('runPerf');
+//      var pageeval = page.evaluate(function (perfObj) {
+//
+//        var report = JSON.parse(perfObj),
+//            now = new Date().getTime(),
+//            timing = performance.timing;
+//        console.log('----report', report.pageLoadTime.value, timing);
+//
+//        setTimeout(function(){
+//        console.log(performance.now(), now);
+//
+//        report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
+//        report.perceivedLoadTime.value = 0; //TODO - calculate if needed
+//        report.requestResponse.value = timing.responseEnd - timing.requestStart;
+//        report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
+//        report.fetchTime.value = timing.connectEnd - timing.fetchStart;
+//        report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
+//
+//
+//        for (var key in report) {
+//
+//          console.log('----', report[key].label, report[key].value)
+//
+//        }
+//
+//        },100);
+//
+//      }, this.performance.perfObj.data());
+//
+//    },
+//
+//    onNavigationRequested : function(page,config){
+//      console.log('runPerf');
+//      var pageeval = page.evaluate(function (perfObj) {
+//
+//        var report = JSON.parse(perfObj),
+//            now = new Date().getTime(),
+//            timing = performance.timing;
+//        console.log('----report', report.pageLoadTime.value, timing);
+//
+//        setTimeout(function(){
+//        console.log(performance.now(), now);
+//
+//        report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
+//        report.perceivedLoadTime.value = 0; //TODO - calculate if needed
+//        report.requestResponse.value = timing.responseEnd - timing.requestStart;
+//        report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
+//        report.fetchTime.value = timing.connectEnd - timing.fetchStart;
+//        report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
+//
+//
+//        for (var key in report) {
+//
+//          console.log('----', report[key].label, report[key].value)
+//
+//        }
+//
+//        },100);
+//
+//      }, this.performance.perfObj.data());
+//
+//    },
+//
+//    onPageCreated : function(page,config){
+//      console.log('runPerf');
+//      var pageeval = page.evaluate(function (perfObj) {
+//
+//        var report = JSON.parse(perfObj),
+//            now = new Date().getTime(),
+//            timing = performance.timing;
+//        console.log('----report', report.pageLoadTime.value, timing);
+//
+//        setTimeout(function(){
+//        console.log(performance.now(), now);
+//
+//        report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
+//        report.perceivedLoadTime.value = 0; //TODO - calculate if needed
+//        report.requestResponse.value = timing.responseEnd - timing.requestStart;
+//        report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
+//        report.fetchTime.value = timing.connectEnd - timing.fetchStart;
+//        report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
+//
+//
+//        for (var key in report) {
+//
+//          console.log('----', report[key].label, report[key].value)
+//
+//        }
+//
+//        },100);
+//
+//      }, this.performance.perfObj.data());
+//
+//    },
+
+    temp: function (page, config) {
+
+      this.performance.runPerf();
+
     },
 
     onLoadFinished: function() {
+//      var timing =  performance.timing;
+     t;
 
-
-
-
-
-
-
-
-      console.log('connectStart',timing.connectStart);
-
-      console.log('navigationStart',timing.navigationStart);
-
-      console.log('secureConnectionStart',timing.secureConnectionStart);
-
-      console.log('fetchStart',timing.fetchStart);
-
-      console.log('domContentLoadedEventStart',timing.domContentLoadedEventStart);
-
-      console.log('responseStart',timing.responseStart);
-
-      console.log('domInteractive',timing.domInteractive);
-
-      console.log('domainLookupEnd',timing.domainLookupEnd);
-
-      console.log('redirectStart',timing.redirectStart);
-
-      console.log('requestStart',timing.requestStart);
-
-      console.log('unloadEventEnd',timing.unloadEventEnd);
-
-      console.log('unloadEventStart',timing.unloadEventStart);
-
-      console.log('domComplete',timing.domComplete);
-
-      console.log('domainLookupStart',timing.domainLookupStart);
-
-      console.log('loadEventStart',timing.loadEventStart);
-
-      console.log('domContentLoadedEventEnd',timing.domContentLoadedEventEnd);
-
-      console.log('redirectEnd', timing.redirectEnd);
-
-      console.log('connectEnd',timing.connectEnd);
-
-      console.log('responseEnd', timing.responseEnd);
-
-      console.log('domLoading',timing.domLoading);
-
-      console.log('loadEventEnd',timing.loadEventEnd);
+//      console.log('navigationStart',timing.navigationStart);
+//
+//      console.log('secureConnectionStart',timing.secureConnectionStart);
+//
+//      console.log('fetchStart',timing.fetchStart);
+//
+//      console.log('domContentLoadedEventStart',timing.domContentLoadedEventStart);
+//
+//      console.log('responseStart',timing.responseStart);
+//
+//      console.log('domInteractive',timing.domInteractive);
+//
+//      console.log('domainLookupEnd',timing.domainLookupEnd);
+//
+//      console.log('redirectStart',timing.redirectStart);
+//
+//      console.log('requestStart',timing.requestStart);
+//
+//      console.log('unloadEventEnd',timing.unloadEventEnd);
+//
+//      console.log('unloadEventStart',timing.unloadEventStart);
+//
+//      console.log('domComplete',timing.domComplete);
+//
+//      console.log('domainLookupStart',timing.domainLookupStart);
+//
+//      console.log('loadEventStart',timing.loadEventStart);
+//
+//      console.log('domContentLoadedEventEnd',timing.domContentLoadedEventEnd);
+//
+//      console.log('redirectEnd', timing.redirectEnd);
+//
+//      console.log('connectEnd',timing.connectEnd);
+//
+//      console.log('responseEnd', timing.responseEnd);
+//
+//      console.log('domLoading',timing.domLoading);
+//
+//      console.log('loadEventEnd',timing.loadEventEnd);
 
     }
   },
 
   navigation: {
-    onInitialized: function(){
+    onLoadStarted: function(){
       var nav = performance.navigation;
 
       console.log('Navigation Timing Description');
@@ -434,7 +561,7 @@ var loadreport = {
       }
       page.settings.userAgent = config.userAgent;
     }
-    ['onInitialized', 'onLoadStarted', 'onLoadFinished','onResourceRequested', 'onResourceReceived']
+    ['onInitialized', 'onLoadStarted', 'onLoadFinished', 'onNavigationRequested', 'onPageCreated', 'onResourceRequested', 'onResourceReceived']
         .forEach(function (event) {
           if (task[event]) {
             page[event] = function () {
