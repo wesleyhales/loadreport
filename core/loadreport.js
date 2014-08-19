@@ -428,7 +428,13 @@ var loadreport = {
       }
       page.settings.userAgent = config.userAgent;
     }
-    ['onInitialized', 'onLoadStarted', 'onLoadFinished', 'onNavigationRequested', 'onPageCreated', 'onResourceRequested', 'onResourceReceived']
+    ['onInitialized',
+     'onLoadStarted',
+     'onLoadFinished',
+     'onNavigationRequested',
+     'onPageCreated',
+     'onResourceRequested',
+     'onResourceReceived']
         .forEach(function (event) {
           if (task[event]) {
             page[event] = function () {
@@ -454,9 +460,8 @@ var loadreport = {
       };
     }
 
-    function doPageLoad(x) {
+    function doPageLoad() {
       setTimeout(function () {
-          console.log('load page',x)
           page.open(config.url);
       }, config.cacheWait);
     }
@@ -465,11 +470,11 @@ var loadreport = {
       pagetemp.open(config.url, function (status) {
           if (status === 'success') {
               pagetemp.release();
-              doPageLoad(2);
+              doPageLoad();
           }
       });
     } else {
-      doPageLoad(3);
+      doPageLoad();
     }
 
     page.settings.localToRemoteUrlAccessEnabled = true;
