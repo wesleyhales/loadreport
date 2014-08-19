@@ -73,7 +73,9 @@ var loadreport = {
 
       onLoadFinished : function(page,config){
         console.log('runPerf');
-        var pageeval = page.evaluate(function (perfObj) {
+//        var pageeval = page.evaluate(function (perfObj) {
+
+
 
           var report = JSON.parse(perfObj),
               now = new Date().getTime(),
@@ -81,7 +83,7 @@ var loadreport = {
 
             console.log(performance.now(), now);
 
-            report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
+            report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart + ' ' + timing.loadEventEnd + ',' + timing.navigationStart;
             report.perceivedLoadTime.value = 0; //TODO - calculate if needed
             report.requestResponse.value = timing.responseEnd - timing.requestStart;
             report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
@@ -95,47 +97,49 @@ var loadreport = {
 
             }
 
-      console.log('navigationStart',timing.navigationStart);
+          console.log('navigationStart',timing.navigationStart);
 
-      console.log('secureConnectionStart',timing.secureConnectionStart);
+          console.log('secureConnectionStart',timing.secureConnectionStart);
 
-      console.log('fetchStart',timing.fetchStart);
+          console.log('fetchStart',timing.fetchStart);
 
-      console.log('domContentLoadedEventStart',timing.domContentLoadedEventStart);
+          console.log('domContentLoadedEventStart',timing.domContentLoadedEventStart);
 
-      console.log('responseStart',timing.responseStart);
+          console.log('responseStart',timing.responseStart);
 
-      console.log('domInteractive',timing.domInteractive);
+          console.log('domInteractive',timing.domInteractive);
 
-      console.log('domainLookupEnd',timing.domainLookupEnd);
+          console.log('domainLookupEnd',timing.domainLookupEnd);
 
-      console.log('redirectStart',timing.redirectStart);
+          console.log('redirectStart',timing.redirectStart);
 
-      console.log('requestStart',timing.requestStart);
+          console.log('requestStart',timing.requestStart);
 
-      console.log('unloadEventEnd',timing.unloadEventEnd);
+          console.log('unloadEventEnd',timing.unloadEventEnd);
 
-      console.log('unloadEventStart',timing.unloadEventStart);
+          console.log('unloadEventStart',timing.unloadEventStart);
 
-      console.log('domComplete',timing.domComplete);
+          console.log('domComplete',timing.domComplete);
 
-      console.log('domainLookupStart',timing.domainLookupStart);
+          console.log('domainLookupStart',timing.domainLookupStart);
 
-      console.log('loadEventStart',timing.loadEventStart);
+          console.log('loadEventStart',timing.loadEventStart);
 
-      console.log('domContentLoadedEventEnd',timing.domContentLoadedEventEnd);
+          console.log('domContentLoadedEventEnd',timing.domContentLoadedEventEnd);
 
-      console.log('redirectEnd', timing.redirectEnd);
+          console.log('redirectEnd', timing.redirectEnd);
 
-      console.log('connectEnd',timing.connectEnd);
+          console.log('connectEnd',timing.connectEnd);
 
-      console.log('responseEnd', timing.responseEnd);
+          console.log('responseEnd', timing.responseEnd);
 
-      console.log('domLoading',timing.domLoading);
+          console.log('domLoading',timing.domLoading);
 
-      console.log('loadEventEnd',timing.loadEventEnd);
+          console.log('loadEventEnd',timing.loadEventEnd);
 
-        }, this.performance.perfObj.data());
+
+
+//        }, this.performance.perfObj.data());
 
     },
 
@@ -461,9 +465,95 @@ var loadreport = {
     }
 
     function doPageLoad() {
-      setTimeout(function () {
-          page.open(config.url);
-      }, config.cacheWait);
+//      setTimeout(function () {
+          page.open(config.url,function(status){
+
+
+
+
+            window.setTimeout(function () {
+              page.evaluate(function () {
+                console.log('eval');
+
+                var report = {},
+                    now = new Date().getTime(),
+                    timing = performance.timing;
+
+                console.log(performance.now(), now);
+
+                //high level load times
+                report.pageLoadTime = {label: 'Total time to load page', value: timing.loadEventEnd - timing.navigationStart};
+
+                report.perceivedLoadTime = {label: 'User-perceived page load time', value: 0};
+
+                //time spent making request to server and receiving the response - after network lookups and nego
+                report.requestResponse = {label: 'Calculate time from request start to response end', value: timing.responseEnd - timing.requestStart};
+
+                //network level redirects
+                report.redirectTime = {label: 'Time spent during redirect', value: timing.redirectEnd - timing.redirectStart};
+
+                //time spent in app cache, domain lookups, and making secure connection
+                report.fetchTime = {label: 'Fetch start to response end', value: timing.connectEnd - timing.fetchStart};
+
+                //time spent processing page
+                report.pageProcessTime = {label: 'Total time spent processing page', value: timing.loadEventStart - timing.domLoading};
+
+                for (var key in report) {
+
+                  console.log('----', report[key].label, report[key].value)
+
+                }
+
+
+                console.log('navigationStart',timing.navigationStart);
+
+                console.log('secureConnectionStart',timing.secureConnectionStart);
+
+                console.log('fetchStart',timing.fetchStart);
+
+                console.log('domContentLoadedEventStart',timing.domContentLoadedEventStart);
+
+                console.log('responseStart',timing.responseStart);
+
+                console.log('domInteractive',timing.domInteractive);
+
+                console.log('domainLookupEnd',timing.domainLookupEnd);
+
+                console.log('redirectStart',timing.redirectStart);
+
+                console.log('requestStart',timing.requestStart);
+
+                console.log('unloadEventEnd',timing.unloadEventEnd);
+
+                console.log('unloadEventStart',timing.unloadEventStart);
+
+                console.log('domComplete',timing.domComplete);
+
+                console.log('domainLookupStart',timing.domainLookupStart);
+
+                console.log('loadEventStart',timing.loadEventStart);
+
+                console.log('domContentLoadedEventEnd',timing.domContentLoadedEventEnd);
+
+                console.log('redirectEnd', timing.redirectEnd);
+
+                console.log('connectEnd',timing.connectEnd);
+
+                console.log('responseEnd', timing.responseEnd);
+
+                console.log('domLoading',timing.domLoading);
+
+                console.log('loadEventEnd',timing.loadEventEnd);
+                document.addEventListener("DOMContentLoaded", function () {
+                  console.log('******************DOMContentLoaded-' + (new Date().getTime()));
+                }, false);
+              });
+            }, 500);
+
+
+
+          });
+//      }, config.cacheWait);
     }
 
     if (config.task == 'performancecache') {
