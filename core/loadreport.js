@@ -52,8 +52,8 @@ var loadreport = {
 
         report.perceivedLoadTime = {label: 'User-perceived page load time', value: 0};
 
-        //time spent making request to server and receiving the response - after network lookups and nego
-        report.requestResponse = {label: 'Calculate time from request start to response end',value: 0};
+        //time spent making request to server and receiving the response - after network lookups and negotiations
+        report.requestResponse = {label: 'Time from request start to response end',value: 0};
 
         //network level redirects
         report.redirectTime = {label:'Time spent during redirect',value: 0};
@@ -63,6 +63,11 @@ var loadreport = {
 
         //time spent processing page
         report.pageProcessTime = {label: 'Total time spent processing page',value: 0};
+
+        //time spent during load event
+        report.loadEvent = {label: 'Total time spent during load event',value: 0};
+
+        report.domContent = {label: 'Total time spent during DomContentLoading event',value: 0};
 
         return JSON.stringify(report);
 
@@ -76,6 +81,7 @@ var loadreport = {
 
         var pageeval = page.evaluate(function (perfObj) {
 
+
           var report = JSON.parse(perfObj),
               now = new Date().getTime(),
               timing = performance.timing;
@@ -83,18 +89,20 @@ var loadreport = {
             console.log(performance.now(), now);
 
             report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
-            report.perceivedLoadTime.value = 0; //TODO - calculate if needed
+            report.perceivedLoadTime.value = now - performance.timing.navigationStart;
             report.requestResponse.value = timing.responseEnd - timing.requestStart;
             report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
             report.fetchTime.value = timing.connectEnd - timing.fetchStart;
             report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
+            report.loadEvent.value = timing.loadEventEnd - timing.loadEventStart;
+            report.domContent.value = timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart;
 
 
             for (var key in report) {
-
-              console.log('----', report[key].label, report[key].value)
-
+              console.log('----', report[key].label, report[key].value + 'ms')
             }
+
+          console.log('connectStart',timing.connectStart);
 
           console.log('navigationStart',timing.navigationStart);
 
@@ -135,6 +143,7 @@ var loadreport = {
           console.log('domLoading',timing.domLoading);
 
           console.log('loadEventEnd',timing.loadEventEnd);
+
 
         }, this.performance.perfObj.data());
 
@@ -452,18 +461,24 @@ var loadreport = {
 
     if (task.onLoadFinished) {
       page.onLoadFinished = function (status) {
-        task.onLoadFinished.call(scope, page, config, status);
-        phantom.exit();
+          //need to timeout and wait for loadEventEnd
+          setTimeout(function(){
+            task.onLoadFinished.call(scope, page, config, status);
+            exit();
+          },1000);
       };
     } else {
       page.onLoadFinished = function (status) {
-        phantom.exit();
+        exit();
       };
     }
 
-    function doPageLoad(x) {
+    function exit(){
+        phantom.exit(0);
+    }
+
+    function doPageLoad() {
       setTimeout(function () {
-          console.log('load page',x)
           page.open(config.url);
       }, config.cacheWait);
     }
