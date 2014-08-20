@@ -1,7 +1,6 @@
 #!/usr/bin/env phantomjs
-
 var fs = require('fs'),
-  WebPage = require('webpage');
+    WebPage = require('webpage');
 
 var loadreport = {
 
@@ -44,7 +43,11 @@ var loadreport = {
 
         var report = {};
 
-        //returnd HRT - High Resolution Time gives us floating point time stamps that can be accurate to microsecond resolution.
+        report.url = {label: 'URL', value: phantom.args[0], index: 32};
+
+        report.screenshot = {label: 'Screenshot', value: '', index: 33};
+
+        //HRT - High Resolution Time gives us floating point time stamps that can be accurate to microsecond resolution.
         //The now() method returns the time elapsed from when the navigationStart time in PerformanceTiming happened.
         report.now = {label: 'HRT now()', value: 0, index: 1};
 
@@ -56,27 +59,73 @@ var loadreport = {
         report.perceivedLoadTime = {label: 'User-perceived page load time', value: 0, index: 4};
 
         //time spent making request to server and receiving the response - after network lookups and negotiations
-        report.requestResponse = {label: 'Time from request start to response end', value: 0, index: 5};
-
-        //network level redirects
-        report.redirectTime = {label: 'Time spent during redirect', value: 0, index: 6};
+        report.requestResponseTime = {label: 'Time from request start to response end', value: 0, index: 5};
 
         //time spent in app cache, domain lookups, and making secure connection
         report.fetchTime = {label: 'Fetch start to response end', value: 0, index: 7};
 
         report.pageProcessTime = {label: 'Total time spent processing page', value: 0, index: 8};
 
-        report.loadEvent = {label: 'Total time spent during load event', value: 0, index: 9};
+        report.domLoading = {value: 0, label: '', index: 30};
 
-        report.domContent = {label: 'Total time spent during DomContentLoading event', value: 0, index: 10};
+        report.domComplete = {value: 0, label: '', index: 23};
+
+        report.loadEventStart = {value: 0, label: '', index: 25};
+
+        report.loadEventEnd = {value: 0, label: '', index: 31};
+
+        report.loadEventTime = {label: 'Total time spent during load event', value: 0, index: 9};
+
+        report.domInteractive = {value: 0, label: '', index: 17};
+
+        report.connectStart = {value: 0 , label: '', index: 11};
+
+        report.connectEnd = {value: 0, label: '', index: 28};
+
+        report.connectTime = {label: 'Time spent during connect', value: 0, index: 28};
+
+        report.navigationStart = {value: 0, label: '', index: 12};
+
+        report.secureConnectionStart = {value: 0, label: '', index: 13};
+
+        report.fetchStart = {value: 0, label: '', index: 14};
+
+        report.domContentLoadedEventStart = {value: 0, label: '', index: 15};
+
+        report.domContentLoadedEventEnd = {value: 0, label: '', index: 26};
+
+        report.domContentTime = {label: 'Total time spent during DomContentLoading event', value: 0, index: 10};
+
+        report.requestStart = {value: 0, label: '', index: 20};
+
+        report.responseStart = {value: 0, label: '', index: 16};
+
+        report.responseEnd = {value: 0, label: '', index: 29};
+
+        report.responseTime = {label: 'Total time spent during response', value: 0, index: 34};
+
+        report.domainLookupStart = {value: 0, label: '', index: 24};
+
+        report.domainLookupEnd = {value: 0, label: '', index: 18};
+
+        report.domainLookupTime = {label: 'Total time spent in domain lookup', value: 0, index: 35};
+
+        report.redirectStart = {value: 0, label: '', index: 19};
+
+        report.redirectEnd = {value: 0, label: '', index: 27};
+
+        //network level redirects
+        report.redirectTime = {label: 'Time spent during redirect', value: 0, index: 6};
+
+        report.unloadEventStart = {value: 0, label: '', index: 22};
+
+        report.unloadEventEnd = {value: 0, label: '', index: 21};
 
         if(string){
           return JSON.stringify(report);
         }else{
           return report;
         }
-
-
 
       }
 
@@ -86,67 +135,48 @@ var loadreport = {
 
       var pageeval = page.evaluate(function (perfObj) {
 
-
         var report = JSON.parse(perfObj),
-          timing = performance.timing;
+            timing = performance.timing;
 
         report.now.value = performance.now();
         report.nowms.value = new Date().getTime();
         report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
         report.perceivedLoadTime.value = report.nowms.value - performance.timing.navigationStart;
-        report.requestResponse.value = timing.responseEnd - timing.requestStart;
+        report.requestResponseTime.value = timing.responseEnd - timing.requestStart;
         report.redirectTime.value = timing.redirectEnd - timing.redirectStart;
         report.fetchTime.value = timing.connectEnd - timing.fetchStart;
         report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
-        report.loadEvent.value = timing.loadEventEnd - timing.loadEventStart;
-        report.domContent.value = timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart;
-
+        report.loadEventTime.value = timing.loadEventEnd - timing.loadEventStart;
+        report.domContentTime.value = timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart;
+        report.connectStart.value =  timing.connectStart;
+        report.navigationStart.value =  timing.navigationStart;
+        report.secureConnectionStart.value =  timing.secureConnectionStart;
+        report.fetchStart.value =  timing.fetchStart;
+        report.domContentLoadedEventStart.value =  timing.domContentLoadedEventStart;
+        report.responseStart.value =  timing.responseStart;
+        report.responseTime.value =  timing.responseEnd - timing.responseStart;
+        report.domInteractive.value =  timing.domInteractive;
+        report.domainLookupEnd.value =  timing.domainLookupEnd;
+        report.domainLookupTime.value = timing.domainLookupEnd - timing.domainLookupStart;
+        report.redirectStart.value =  timing.redirectStart;
+        report.requestStart.value =  timing.requestStart;
+        report.unloadEventEnd.value =  timing.unloadEventEnd;
+        report.unloadEventStart.value =  timing.unloadEventStart;
+        report.domComplete.value =  timing.domComplete;
+        report.domainLookupStart.value =  timing.domainLookupStart;
+        report.loadEventStart.value =  timing.loadEventStart;
+        report.domContentLoadedEventEnd.value =  timing.domContentLoadedEventEnd;
+        report.redirectEnd.value =  timing.redirectEnd;
+        report.connectEnd.value =  timing.connectEnd;
+        report.connectTime.value = timing.connectEnd - timing.connectStart;
+        report.responseEnd.value =  timing.responseEnd;
+        report.domLoading.value =  timing.domLoading;
+        report.loadEventEnd.value =  timing.loadEventEnd;
 
         for (var key in report) {
+          //export/bridge data back to phantom context
           console.log(JSON.stringify(report[key]));
         }
-
-        console.log('connectStart', timing.connectStart);
-
-        console.log('navigationStart', timing.navigationStart);
-
-        console.log('secureConnectionStart', timing.secureConnectionStart);
-
-        console.log('fetchStart', timing.fetchStart);
-
-        console.log('domContentLoadedEventStart', timing.domContentLoadedEventStart);
-
-        console.log('responseStart', timing.responseStart);
-
-        console.log('domInteractive', timing.domInteractive);
-
-        console.log('domainLookupEnd', timing.domainLookupEnd);
-
-        console.log('redirectStart', timing.redirectStart);
-
-        console.log('requestStart', timing.requestStart);
-
-        console.log('unloadEventEnd', timing.unloadEventEnd);
-
-        console.log('unloadEventStart', timing.unloadEventStart);
-
-        console.log('domComplete', timing.domComplete);
-
-        console.log('domainLookupStart', timing.domainLookupStart);
-
-        console.log('loadEventStart', timing.loadEventStart);
-
-        console.log('domContentLoadedEventEnd', timing.domContentLoadedEventEnd);
-
-        console.log('redirectEnd', timing.redirectEnd);
-
-        console.log('connectEnd', timing.connectEnd);
-
-        console.log('responseEnd', timing.responseEnd);
-
-        console.log('domLoading', timing.domLoading);
-
-        console.log('loadEventEnd', timing.loadEventEnd);
 
       }, this.performance.perfObj.data(true));
 
@@ -369,17 +399,17 @@ var loadreport = {
       //console.log(JSON.stringify(report));
       console.log('Elapsed load time: ' + this.pad(elapsed, 6) + 'ms');
 
-      if (phantom.args.indexOf('csv') >= 0) {
-        this.printToFile(config, report, 'loadreport', 'csv', phantom.args.indexOf('wipe') >= 0);
-      }
-
-      if (phantom.args.indexOf('json') >= 0) {
-        this.printToFile(config, report, 'loadreport', 'json', phantom.args.indexOf('wipe') >= 0);
-      }
-
-      if (phantom.args.indexOf('junit') >= 0) {
-        this.printToFile(config, report, 'loadreport', 'xml', phantom.args.indexOf('wipe') >= 0);
-      }
+//      if (phantom.args.indexOf('csv') >= 0) {
+//        this.printToFile(config, report, 'loadreport', 'csv', phantom.args.indexOf('wipe') >= 0);
+//      }
+//
+//      if (phantom.args.indexOf('json') >= 0) {
+//        this.printToFile(config, report, 'loadreport', 'json', phantom.args.indexOf('wipe') >= 0);
+//      }
+//
+//      if (phantom.args.indexOf('junit') >= 0) {
+//        this.printToFile(config, report, 'loadreport', 'xml', phantom.args.indexOf('wipe') >= 0);
+//      }
 
     }
 
@@ -408,12 +438,6 @@ var loadreport = {
     }
   },
 
-  getFinalUrl: function (page) {
-    return page.evaluate(function () {
-      return document.location.toString();
-    });
-  },
-
   emitConfig: function (config, prefix) {
     console.log(prefix + 'Config:');
     for (key in config) {
@@ -432,8 +456,8 @@ var loadreport = {
 
   load: function (config, task, scope) {
     var page = WebPage.create(),
-      pagetemp = WebPage.create(),
-      event;
+        pagetemp = WebPage.create(),
+        event;
 
     if (config.userAgent && config.userAgent != "default") {
       if (config.userAgentAliases[config.userAgent]) {
@@ -468,13 +492,35 @@ var loadreport = {
         //todo - paramaterize
         setTimeout(function () {
           task.onLoadFinished.call(scope, page, config, status);
+          loadreport.reportData.screenshot.value = loadreport.reportData.nowms.value + '.png';
+          page.viewportSize = { width: 1024, height: 768 };
+          page.render('reports/' + loadreport.reportData.url.value.replace('://','_') + '/' + loadreport.reportData.screenshot.value);
+
+          printReport(loadreport.reportData);
+
           exit();
+
         }, 1000);
       };
     } else {
       page.onLoadFinished = function (status) {
         exit();
       };
+    }
+
+    function printReport(report) {
+      var reportLocation = loadreport.reportData.url.value.replace('://','_') + '/loadreport';
+      if (phantom.args.indexOf('csv') >= 0) {
+        loadreport.printToFile(report, reportLocation, 'csv', phantom.args.indexOf('wipe') >= 0);
+      }
+
+      if (phantom.args.indexOf('json') >= 0) {
+        loadreport.printToFile(report, reportLocation, 'json', phantom.args.indexOf('wipe') >= 0);
+      }
+
+      if (phantom.args.indexOf('junit') >= 0) {
+        loadreport.printToFile(report, reportLocation, 'xml', phantom.args.indexOf('wipe') >= 0);
+      }
     }
 
     function exit() {
@@ -500,6 +546,7 @@ var loadreport = {
 
     page.settings.localToRemoteUrlAccessEnabled = true;
     page.settings.webSecurityEnabled = false;
+
     page.onConsoleMessage = function (msg) {
 
       if(Object.keys(loadreport.reportData).length === 0){
@@ -507,7 +554,7 @@ var loadreport = {
       }
 
       var incoming = JSON.parse(msg);
-      //todo could be more efficient
+
       for (var entry in loadreport.reportData) {
         if(loadreport.reportData[entry].index === incoming.index){
           loadreport.reportData[entry] = incoming;
@@ -712,13 +759,16 @@ var loadreport = {
     return junit.join('\n');
   },
 
-  printToFile: function (config, report, filename, extension, createNew) {
-    var f, myfile,
-      keys = [], values = [];
+  printToFile: function (report, filename, extension, createNew) {
+    var f,
+        myfile,
+        keys = [],
+        values = [];
+
     for (var key in report) {
       if (report.hasOwnProperty(key)) {
         keys.push(key);
-        values.push(report[key]);
+        values.push(report[key].value);
       }
     }
     if (phantom.args[3] && phantom.args[3] != 'wipe') {
@@ -726,6 +776,7 @@ var loadreport = {
     } else {
       myfile = 'reports/' + filename + '.' + extension;
     }
+
     // Given localhost:8880/some
     // Transforms to localhost_8880/some
     myfile = myfile.replace(":", "_");

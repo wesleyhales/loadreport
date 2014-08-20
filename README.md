@@ -4,7 +4,8 @@
 ## Install
 ### npm install -g
 
-
+#Usage
+`phantomjs --ssl-protocol=any --ignore-ssl-errors=yes loadreport.js http://www.onslyde.com performance csv`
 
 ## License
 
