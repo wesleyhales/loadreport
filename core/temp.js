@@ -55,7 +55,7 @@ page.open(address, function (status) {
 
     });
 
-
+  phantom.exit(0);
 });
 
 

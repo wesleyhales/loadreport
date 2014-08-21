@@ -121,6 +121,18 @@ var loadreport = {
 
         report.unloadEventEnd = {value: 0, label: '', index: 21};
 
+        //navigation timing
+        report.timing = {value: 0, label: '', index: 36};
+
+        //PhantomJS Error Detection
+        report.errors = {value: [], label: '', index: 37};
+
+        report.domperfDOMContentLoaded = {value: 0, label: '', index: 40};
+
+        report.domperfLoad = {value: 0, label: '', index: 41};
+
+//        loadreport.reportData = report;
+
         if(string){
           return JSON.stringify(report);
         }else{
@@ -133,13 +145,14 @@ var loadreport = {
 
     onLoadFinished: function (page, config) {
 
-      var pageeval = page.evaluate(function (perfObj) {
+      page.evaluate(function (perfObj) {
 
         var report = JSON.parse(perfObj),
-            timing = performance.timing;
+            timing = performance.timing,
+            nav = performance.navigation;
 
-        report.now.value = performance.now();
-        report.nowms.value = new Date().getTime();
+        //--------------- Begin PhantomJS supported user timing and performance timing measurements
+
         report.pageLoadTime.value = timing.loadEventEnd - timing.navigationStart;
         report.perceivedLoadTime.value = report.nowms.value - performance.timing.navigationStart;
         report.requestResponseTime.value = timing.responseEnd - timing.requestStart;
@@ -148,37 +161,58 @@ var loadreport = {
         report.pageProcessTime.value = timing.loadEventStart - timing.domLoading;
         report.loadEventTime.value = timing.loadEventEnd - timing.loadEventStart;
         report.domContentTime.value = timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart;
-        report.connectStart.value =  timing.connectStart;
-        report.navigationStart.value =  timing.navigationStart;
-        report.secureConnectionStart.value =  timing.secureConnectionStart;
-        report.fetchStart.value =  timing.fetchStart;
-        report.domContentLoadedEventStart.value =  timing.domContentLoadedEventStart;
-        report.responseStart.value =  timing.responseStart;
-        report.responseTime.value =  timing.responseEnd - timing.responseStart;
-        report.domInteractive.value =  timing.domInteractive;
-        report.domainLookupEnd.value =  timing.domainLookupEnd;
+        report.connectStart.value = timing.connectStart;
+        report.navigationStart.value = timing.navigationStart;
+        report.secureConnectionStart.value = timing.secureConnectionStart;
+        report.fetchStart.value = timing.fetchStart;
+        report.domContentLoadedEventStart.value = timing.domContentLoadedEventStart;
+        report.responseStart.value = timing.responseStart;
+        report.responseTime.value = timing.responseEnd - timing.responseStart;
+        report.domInteractive.value = timing.domInteractive;
+        report.domainLookupEnd.value = timing.domainLookupEnd;
         report.domainLookupTime.value = timing.domainLookupEnd - timing.domainLookupStart;
-        report.redirectStart.value =  timing.redirectStart;
-        report.requestStart.value =  timing.requestStart;
-        report.unloadEventEnd.value =  timing.unloadEventEnd;
-        report.unloadEventStart.value =  timing.unloadEventStart;
-        report.domComplete.value =  timing.domComplete;
-        report.domainLookupStart.value =  timing.domainLookupStart;
-        report.loadEventStart.value =  timing.loadEventStart;
-        report.domContentLoadedEventEnd.value =  timing.domContentLoadedEventEnd;
-        report.redirectEnd.value =  timing.redirectEnd;
-        report.connectEnd.value =  timing.connectEnd;
+        report.redirectStart.value = timing.redirectStart;
+        report.requestStart.value = timing.requestStart;
+        report.unloadEventEnd.value = timing.unloadEventEnd;
+        report.unloadEventStart.value = timing.unloadEventStart;
+        report.domComplete.value = timing.domComplete;
+        report.domainLookupStart.value = timing.domainLookupStart;
+        report.loadEventStart.value = timing.loadEventStart;
+        report.domContentLoadedEventEnd.value = timing.domContentLoadedEventEnd;
+        report.redirectEnd.value = timing.redirectEnd;
+        report.connectEnd.value = timing.connectEnd;
         report.connectTime.value = timing.connectEnd - timing.connectStart;
-        report.responseEnd.value =  timing.responseEnd;
-        report.domLoading.value =  timing.domLoading;
-        report.loadEventEnd.value =  timing.loadEventEnd;
+        report.responseEnd.value = timing.responseEnd;
+        report.domLoading.value = timing.domLoading;
+        report.loadEventEnd.value = timing.loadEventEnd;
+
+
+        report.timing.value = nav.type;
+
+        switch (report.timing.value) {
+          case 0:
+            report.timing.label = ('Type_NavigateNext: Navigation started by clicking on a link, or entering the URL in the user agent\'s address bar, or form submission, or initializing through a script operation');
+            break;
+          case 1:
+            report.timing.label = ('Type_Reload: Navigation through the reload operation or the location.reload() method.');
+            break;
+          case 2:
+            report.timing.label = ('Type_Back_Forward: Navigation through a history traversal operation.');
+            break;
+          case 255:
+            report.timing.label = ('Type_Undefined: Any navigation types not defined by values above.');
+            break;
+          default:
+            report.timing.label = ('Not detected');
+        }
 
         for (var key in report) {
           //export/bridge data back to phantom context
           console.log(JSON.stringify(report[key]));
         }
 
-      }, this.performance.perfObj.data(true));
+        //}, this.performance.perfObj.data(true)); this needs to be inititialized earlier
+      }, JSON.stringify(loadreport.reportData));
 
     },
 
@@ -194,8 +228,45 @@ var loadreport = {
       console.log('###### onPageCreated');
     },
 
-    onInitialized: function () {
+    onInitialized: function (page) {
       console.log('###### onInitialized');
+
+      if(Object.keys(loadreport.reportData).length === 0){
+        console.log('init report data');
+        loadreport.reportData = loadreport.performance.perfObj.data(false);
+      }
+
+      page.evaluate(function (perfObj) {
+
+        var nowms = new Date().getTime();
+
+//        report.nowms.value = new Date().getTime();
+        console.log(JSON.stringify({value: nowms, label: '', index: 2}));
+//        report.now.value = performance.now();
+        console.log(JSON.stringify({value: performance.now(), label: '', index: 1}));
+
+        //--------------- Begin ways of old DOM perf with event Listeners
+
+        //The DOMContentLoaded event is fired when the document has been completely
+        //loaded and parsed, without waiting for stylesheets, images, and subframes
+        //to finish loading
+        document.addEventListener("DOMContentLoaded", function () {
+          console.log(JSON.stringify({value: (new Date().getTime() - nowms), label: '', index: 41}));
+        }, false);
+
+        //detect a fully-loaded page
+        window.addEventListener("load", function () {
+          console.log(JSON.stringify({value: (new Date().getTime() - nowms), label: '', index: 40}));
+        }, false);
+
+        //check for JS errors
+        window.onerror = function (message, url, linenumber) {
+          console.log('error:' + message + " on line " + linenumber + " for " + url);
+        };
+
+
+        //--------------- End DOM event Listeners
+      });
     }
   },
 
@@ -205,22 +276,7 @@ var loadreport = {
 
       console.log('Navigation Timing Description');
 
-      switch (nav.type) {
-        case 0:
-          console.log('Type_NavigateNext: Navigation started by clicking on a link, or entering the URL in the user agent\'s address bar, or form submission, or initializing through a script operation');
-          break;
-        case 1:
-          console.log('Type_Reload: Navigation through the reload operation or the location.reload() method.');
-          break;
-        case 2:
-          console.log('Type_Back_Forward: Navigation through a history traversal operation.');
-          break;
-        case 255:
-          console.log('Type_Undefined: Any navigation types not defined by values above.');
-          break;
-        default:
-          console.log('Not detected');
-      }
+
     }
   },
 
@@ -235,51 +291,7 @@ var loadreport = {
     evalConsoleErrors: [],
     onInitialized: function (page, config) {
       var pageeval = page.evaluate(function (startTime) {
-        var now = new Date().getTime();
-        //check the readystate within the page being loaded
 
-        //Returns "loading" while the document is loading
-        var _timer3 = setInterval(function () {
-          if (/loading/.test(document.readyState)) {
-            console.log('loading-' + (new Date().getTime() - startTime));
-            //don't clear the interval until we get last measurement
-          }
-        }, 5);
-
-        // "interactive" once it is finished parsing but still loading sub-resources
-        var _timer1 = setInterval(function () {
-          if (/interactive/.test(document.readyState)) {
-            console.log('interactive-' + (new Date().getTime() - startTime));
-            clearInterval(_timer1);
-            //clear loading interval
-            clearInterval(_timer3);
-          }
-        }, 5);
-
-        //"complete" once it has loaded - same as load event below
-        // var _timer2=setInterval(function(){
-        //     if(/complete/.test(document.readyState)){
-        //         console.log('complete-' + (new Date().getTime() - startTime));
-        //         clearInterval(_timer2);
-        //     }
-        // }, 5);
-
-        //The DOMContentLoaded event is fired when the document has been completely
-        //loaded and parsed, without waiting for stylesheets, images, and subframes
-        //to finish loading
-        document.addEventListener("DOMContentLoaded", function () {
-          console.log('DOMContentLoaded-' + (new Date().getTime() - startTime));
-        }, false);
-
-        //detect a fully-loaded page
-        window.addEventListener("load", function () {
-          console.log('onload-' + (new Date().getTime() - startTime));
-        }, false);
-
-        //check for JS errors
-        window.onerror = function (message, url, linenumber) {
-          console.log("jserror-JavaScript error: " + message + " on line " + linenumber + " for " + url);
-        };
       }, this.performance_old.start);
     },
     onLoadStarted: function (page, config) {
@@ -399,17 +411,6 @@ var loadreport = {
       //console.log(JSON.stringify(report));
       console.log('Elapsed load time: ' + this.pad(elapsed, 6) + 'ms');
 
-//      if (phantom.args.indexOf('csv') >= 0) {
-//        this.printToFile(config, report, 'loadreport', 'csv', phantom.args.indexOf('wipe') >= 0);
-//      }
-//
-//      if (phantom.args.indexOf('json') >= 0) {
-//        this.printToFile(config, report, 'loadreport', 'json', phantom.args.indexOf('wipe') >= 0);
-//      }
-//
-//      if (phantom.args.indexOf('junit') >= 0) {
-//        this.printToFile(config, report, 'loadreport', 'xml', phantom.args.indexOf('wipe') >= 0);
-//      }
 
     }
 
@@ -498,9 +499,23 @@ var loadreport = {
 
           printReport(loadreport.reportData);
 
+
+          //log the entries
+          for (var entry in loadreport.reportData) {
+            if(loadreport.reportData[entry].value instanceof Array){
+              for (var i = 0; i <  loadreport.reportData[entry].value.length;i++) {
+                console.log('2--',loadreport.reportData[entry].label,loadreport.reportData[entry].value[i])
+              }
+
+            }else{
+              console.log('1--',entry,loadreport.reportData[entry].label,loadreport.reportData[entry].value)
+            }
+
+          }
+
           exit();
 
-        }, 1000);
+        }, 1);
       };
     } else {
       page.onLoadFinished = function (status) {
@@ -549,42 +564,38 @@ var loadreport = {
 
     page.onConsoleMessage = function (msg) {
 
-      if(Object.keys(loadreport.reportData).length === 0){
-        loadreport.reportData = loadreport.performance.perfObj.data(false);
+      var error = false,
+          incoming = msg;
+
+      if (msg.indexOf('error:') >= 0) {
+        loadreport.reportData.errors.value.push(msg.substring('error:'.length, msg.length));
+        error = true;
       }
 
-      var incoming = JSON.parse(msg);
+      //if above conditions were not met, handle normal JSON.stringified message
+      if (typeof incoming === 'string') {
 
-      for (var entry in loadreport.reportData) {
-        if(loadreport.reportData[entry].index === incoming.index){
-          loadreport.reportData[entry] = incoming;
+        try{
+          incoming = JSON.parse(incoming);
+        }catch(e){
+          //if being logged with no format, assume error
+          msg = msg.replace('\n','');
+          msg = msg.replace(',','&#044;')
+          incoming = loadreport.reportData.errors.value.push(msg);
         }
       }
 
       for (var entry in loadreport.reportData) {
-        console.log('1',loadreport.reportData[entry].label,loadreport.reportData[entry].value)
+        if(loadreport.reportData[entry].index === incoming.index && !error){
+          loadreport.reportData[entry] = incoming;
+        }
       }
-//
-//      if (msg.indexOf('jserror-') >= 0) {
-//        loadreport.performance_old.evalConsoleErrors.push(msg.substring('jserror-'.length, msg.length));
-//      } else {
-//        if (msg.indexOf('loading-') >= 0) {
-//          loadreport.performance_old.evalConsole.loading = msg.substring('loading-'.length, msg.length);
-//        } else if (msg.indexOf('interactive-') >= 0) {
-//          loadreport.performance_old.evalConsole.interactive = msg.substring('interactive-'.length, msg.length);
-//          // } else if (msg.indexOf('complete-') >= 0){
-//          //     loadreport.performance_old.evalConsole.complete = msg.substring('complete-'.length,msg.length);
-//        } else if (msg.indexOf('onload-') >= 0) {
-//          loadreport.performance_old.evalConsole.onload = msg.substring('onload-'.length, msg.length);
-//        }
-//        //loadreport.performance_old.evalConsole.push(msg);
-//      }
+
     };
 
     page.onError = function (msg, trace) {
-      //console.log("+++++  " + msg);
       trace.forEach(function (item) {
-        loadreport.performance_old.evalConsoleErrors.push(msg + ':' + item.file + ':' + item.line);
+        loadreport.reportData.errors.value.push(msg + ':' + item.file + ':' + item.line);
       })
     };
 
